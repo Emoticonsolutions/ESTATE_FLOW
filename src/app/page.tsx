@@ -25,6 +25,8 @@ import {
   Clock,
 } from 'lucide-react';
 import { DemoVideoPlayer } from '@/components/landing/DemoVideoPlayer';
+import { PublicNavbar } from '@/components/layout/PublicNavbar';
+import { PublicFooter } from '@/components/layout/PublicFooter';
 
 export default function HomePage() {
   const stakeholderRoles = [
@@ -104,51 +106,8 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-slate-50 text-[#263445]">
-      {/* Top Navbar */}
-      <header className="h-20 border-b border-slate-200 bg-white/95 backdrop-blur sticky top-0 z-50 shadow-sm">
-        <div className="max-w-7xl mx-auto px-6 h-full flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-[#17324D] via-[#3478C9] to-[#159D91] flex items-center justify-center text-white font-black text-lg shadow-md">
-              EF
-            </div>
-            <div>
-              <span className="text-xl font-black text-[#17324D] tracking-tight">
-                ESTATE<span className="text-[#3478C9]">FLOW</span>
-              </span>
-              <span className="hidden sm:inline-block ml-2 text-[10px] bg-teal-50 text-teal-700 border border-teal-200 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">
-                Multi-Tenant CRM OS
-              </span>
-            </div>
-          </div>
-
-          <nav className="hidden lg:flex items-center space-x-7 text-xs font-bold text-slate-600 uppercase tracking-wider">
-            <a href="#demo-video" className="hover:text-[#3478C9] transition-colors flex items-center gap-1 text-teal-700 font-extrabold">
-              <Play size={13} className="text-teal-600 fill-teal-600" /> Demo Video
-            </a>
-            <a href="#stakeholders" className="hover:text-[#3478C9] transition-colors">Stakeholder Portals</a>
-            <a href="#modules" className="hover:text-[#3478C9] transition-colors">17 Core Modules</a>
-            <a href="#comparison" className="hover:text-[#3478C9] transition-colors">Comparison</a>
-            <Link href="/pricing" className="hover:text-[#3478C9] transition-colors">SaaS Plans</Link>
-          </nav>
-
-          <div className="flex items-center space-x-3">
-            <Link
-              href="/login"
-              className="px-4 py-2 text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors border border-slate-200 flex items-center gap-1.5"
-            >
-              <Lock size={13} className="text-slate-500" />
-              <span>Stakeholder Login</span>
-            </Link>
-            <Link
-              href="/dashboard"
-              className="px-5 py-2.5 bg-[#3478C9] hover:bg-blue-700 text-white rounded-lg text-xs font-bold shadow-md shadow-blue-500/20 transition-all flex items-center gap-1.5 group"
-            >
-              <span>Launch Live CRM</span>
-              <ArrowRight size={14} className="group-hover:translate-x-0.5 transition-transform" />
-            </Link>
-          </div>
-        </div>
-      </header>
+      {/* Universal Public Navbar */}
+      <PublicNavbar />
 
       {/* Hero Section */}
       <section className="pt-16 pb-20 px-6 bg-gradient-to-b from-white via-slate-50 to-slate-100 border-b border-slate-200">
@@ -525,11 +484,8 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="bg-white border-t border-slate-200 py-10 px-6 text-center text-xs text-slate-500">
-        <p className="font-semibold text-slate-700">EstateFlow CRM v1.0 • Multi-Tenant Real Estate SaaS Platform</p>
-        <p className="mt-1">Built with Next.js 14, TypeScript, Tailwind CSS, Recharts & Prisma ORM.</p>
-      </footer>
+      {/* Universal Public Footer */}
+      <PublicFooter />
     </div>
   );
 }

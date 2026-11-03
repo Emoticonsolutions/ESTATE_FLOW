@@ -208,7 +208,7 @@ function LoginContent() {
   const Icon = activePortal.icon;
 
   return (
-    <div className="min-h-screen bg-slate-100 flex flex-col justify-center py-10 px-4 sm:px-6 lg:px-8">
+    <div className="py-10 px-4 sm:px-6 lg:px-8 flex flex-col justify-center">
       <div className="max-w-4xl w-full mx-auto">
         {/* Header Branding */}
         <div className="text-center mb-6">

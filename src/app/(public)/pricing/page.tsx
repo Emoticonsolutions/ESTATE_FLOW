@@ -59,11 +59,13 @@ export default function PricingPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-slate-50 py-12 px-6">
+    <div className="py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-6xl mx-auto">
-        <Link href="/" className="inline-flex items-center gap-2 text-sm text-[#3478C9] font-semibold mb-6 hover:underline">
-          <ArrowLeft size={16} /> Back to Home
-        </Link>
+        <div className="flex items-center gap-2 text-xs text-slate-500 mb-6 font-medium">
+          <Link href="/" className="hover:text-[#3478C9]">Home</Link>
+          <span>/</span>
+          <span className="text-[#17324D] font-bold">SaaS Pricing</span>
+        </div>
         <div className="text-center mb-12">
           <span className="text-xs font-bold text-teal-600 uppercase tracking-widest">SaaS Subscriptions</span>
           <h1 className="text-3xl sm:text-4xl font-black text-[#17324D] mt-1">Transparent Pricing for Real Estate Leaders</h1>

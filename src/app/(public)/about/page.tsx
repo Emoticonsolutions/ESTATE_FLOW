@@ -3,11 +3,13 @@ import { ArrowLeft, Building2, CheckCircle2 } from 'lucide-react';
 
 export default function AboutPage() {
   return (
-    <div className="min-h-screen bg-slate-50 py-12 px-6">
+    <div className="py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-4xl mx-auto">
-        <Link href="/" className="inline-flex items-center gap-2 text-sm text-[#3478C9] font-semibold mb-6 hover:underline">
-          <ArrowLeft size={16} /> Back to Home
-        </Link>
+        <div className="flex items-center gap-2 text-xs text-slate-500 mb-6 font-medium">
+          <Link href="/" className="hover:text-[#3478C9]">Home</Link>
+          <span>/</span>
+          <span className="text-[#17324D] font-bold">About</span>
+        </div>
         <div className="bg-white p-8 md:p-12 rounded-2xl border border-slate-200 shadow-sm">
           <span className="text-xs font-bold text-teal-600 uppercase tracking-widest">About EstateFlow</span>
           <h1 className="text-3xl font-black text-[#17324D] mt-1 mb-6">Engineered for High-Velocity Real Estate</h1>

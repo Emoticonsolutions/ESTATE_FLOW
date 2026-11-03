@@ -33,9 +33,9 @@ export function Header() {
   ];
 
   return (
-    <header className="h-16 bg-white border-b border-[#E3E8EF] flex items-center justify-between px-6 z-20 shadow-sm">
+    <header className="h-16 bg-white border-b border-[#E3E8EF] flex items-center justify-between px-4 sm:px-6 z-20 shadow-xs">
       {/* Left side: Search & Tenant Switcher */}
-      <div className="flex items-center space-x-4">
+      <div className="flex items-center space-x-3 sm:space-x-4">
         {/* Company / Builder Switcher */}
         <div className="relative">
           <button
@@ -43,11 +43,11 @@ export function Header() {
               setShowCompanyMenu(!showCompanyMenu);
               setShowRoleMenu(false);
             }}
-            className="flex items-center gap-2 px-3 py-1.5 bg-[#F5F7FA] border border-[#E3E8EF] rounded-lg text-xs font-semibold text-[#17324D] hover:bg-slate-100 transition-colors"
+            className="h-9 flex items-center gap-2 px-3 bg-[#F5F7FA] border border-[#E3E8EF] rounded-lg text-xs font-semibold text-[#17324D] hover:bg-slate-100 transition-colors shadow-2xs"
           >
-            <Building size={14} className="text-[#3478C9]" />
-            <span className="max-w-[160px] truncate">{currentCompany.name}</span>
-            <ChevronDown size={14} className="text-slate-400" />
+            <Building size={14} className="text-[#3478C9] shrink-0" />
+            <span className="max-w-[130px] sm:max-w-[170px] truncate">{currentCompany.name}</span>
+            <ChevronDown size={14} className="text-slate-400 shrink-0" />
           </button>
 
           {showCompanyMenu && (
@@ -83,17 +83,17 @@ export function Header() {
 
         {/* Global Search Bar */}
         <div className="relative hidden md:block">
-          <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
           <input
             type="text"
-            placeholder="Search leads, units (e.g. A-304), customers, bookings..."
-            className="w-80 pl-9 pr-4 py-1.5 bg-[#F5F7FA] border border-[#E3E8EF] rounded-input text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-[#3478C9] focus:bg-white transition-all"
+            placeholder="Search leads, units, customers..."
+            className="w-48 lg:w-64 h-9 pl-9 pr-3 bg-[#F5F7FA] border border-[#E3E8EF] rounded-lg text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-[#3478C9] focus:bg-white transition-all"
           />
         </div>
       </div>
 
       {/* Right side: Role Simulator, Notifications, Profile */}
-      <div className="flex items-center space-x-3">
+      <div className="flex items-center space-x-2 sm:space-x-3">
         {/* Role Switcher Pill */}
         <div className="relative">
           <button
@@ -101,12 +101,12 @@ export function Header() {
               setShowRoleMenu(!showRoleMenu);
               setShowCompanyMenu(false);
             }}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 text-[#3478C9] rounded-lg text-xs font-semibold hover:border-blue-300 transition-colors shadow-sm"
+            className="h-9 flex items-center gap-1.5 px-3 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 text-[#3478C9] rounded-lg text-xs font-semibold hover:border-blue-300 transition-colors shadow-2xs"
           >
-            <UserCheck size={14} className="text-[#3478C9]" />
+            <UserCheck size={14} className="text-[#3478C9] shrink-0" />
             <span className="hidden sm:inline text-slate-600 font-normal">Role:</span>
-            <span className="font-semibold text-[#17324D]">{currentRole.replace('_', ' ')}</span>
-            <ChevronDown size={13} className="text-blue-500" />
+            <span className="font-semibold text-[#17324D] truncate max-w-[110px] sm:max-w-none">{currentRole.replace('_', ' ')}</span>
+            <ChevronDown size={13} className="text-blue-500 shrink-0" />
           </button>
 
           {showRoleMenu && (
@@ -148,7 +148,7 @@ export function Header() {
         {/* Quick Add Lead Shortcut */}
         <Link
           href="/leads?action=new"
-          className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 bg-[#3478C9] hover:bg-[#2563eb] text-white rounded-lg text-xs font-semibold shadow-sm transition-all"
+          className="h-9 hidden lg:flex items-center gap-1.5 px-3 bg-[#3478C9] hover:bg-blue-600 text-white rounded-lg text-xs font-semibold shadow-xs transition-all"
         >
           <PlusCircle size={14} />
           <span>New Lead</span>
@@ -158,10 +158,10 @@ export function Header() {
         <div className="relative">
           <button
             onClick={() => setShowNotifications(!showNotifications)}
-            className="p-2 text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-lg relative transition-colors"
+            className="h-9 w-9 flex items-center justify-center text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-lg relative transition-colors"
           >
-            <Bell size={18} />
-            <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-[#DC5555] rounded-full ring-2 ring-white"></span>
+            <Bell size={17} />
+            <span className="absolute top-2 right-2 w-2 h-2 bg-[#DC5555] rounded-full ring-2 ring-white"></span>
           </button>
 
           {showNotifications && (
