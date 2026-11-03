@@ -78,9 +78,8 @@ export default function PricingPage() {
           {plans.map((p, idx) => (
             <div
               key={idx}
-              className={`bg-white rounded-2xl p-7 border relative flex flex-col justify-between shadow-sm transition-all ${
-                p.popular ? 'border-[#3478C9] ring-2 ring-[#3478C9]/20 shadow-lg' : 'border-slate-200'
-              }`}
+              className={`bg-white rounded-2xl p-7 border relative flex flex-col justify-between shadow-sm transition-all ${p.popular ? 'border-[#3478C9] ring-2 ring-[#3478C9]/20 shadow-lg' : 'border-slate-200'
+                }`}
             >
               {p.popular && (
                 <span className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-[#3478C9] text-white text-[11px] font-bold px-3 py-1 rounded-full uppercase tracking-wider">
@@ -110,11 +109,10 @@ export default function PricingPage() {
 
               <Link
                 href="/contact"
-                className={`w-full py-2.5 rounded-lg text-xs font-bold text-center transition-all ${
-                  p.popular
-                    ? 'bg-[#3478C9] hover:bg-blue-600 text-white shadow-md'
-                    : 'bg-slate-100 hover:bg-slate-200 text-slate-800'
-                }`}
+                className={`w-full py-2.5 rounded-lg text-xs font-bold text-center transition-all ${p.popular
+                  ? 'bg-[#3478C9] hover:bg-blue-600 text-white shadow-md'
+                  : 'bg-slate-100 hover:bg-slate-200 text-slate-800'
+                  }`}
               >
                 {p.cta}
               </Link>
