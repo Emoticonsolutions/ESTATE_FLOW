@@ -40,6 +40,27 @@ export interface Company {
   phone: string;
   city: string;
   createdAt: string;
+
+  // Legal Registration & Compliance (CIN, RERA, GSTIN)
+  registrationNumber?: string; // Corporate Identification Number (CIN) or Firm Reg Number
+  cin?: string;
+  reraNumber?: string; // State RERA Builder/Promoter Reg ID
+  gstin?: string; // 15-digit GSTIN
+  panNumber?: string;
+  address?: string;
+  state?: string;
+  pincode?: string;
+
+  // SaaS Subscription & Billing
+  monthlyFee?: number;
+  billingCycle?: 'Monthly' | 'Annual';
+  nextRenewalDate?: string;
+  paymentStatus?: 'Paid' | 'Pending' | 'Overdue';
+  adminName?: string;
+  adminEmail?: string;
+  usersCount?: number;
+  projectsCount?: number;
+  unitsCount?: number;
 }
 
 export interface User {

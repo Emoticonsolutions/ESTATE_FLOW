@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
@@ -25,6 +25,7 @@ import {
   Download,
   Send,
   Eye,
+  EyeOff,
   Key,
   Edit,
   ExternalLink,
@@ -40,47 +41,15 @@ import {
   X,
   AlertCircle,
   Check,
+  Copy,
+  RefreshCw,
+  Hash,
+  ShieldCheck,
+  FileCheck2,
+  ChevronDown,
 } from 'lucide-react';
 import { useTenant } from '@/lib/tenantContext';
-
-interface TenantCompany {
-  id: string;
-  name: string;
-  code: string;
-  plan: 'Starter' | 'Professional' | 'Enterprise';
-  status: 'Active' | 'Suspended' | 'Trial';
-  userLimit: number;
-  usersCount: number;
-  projectLimit: number;
-  projectsCount: number;
-  unitsCount: number;
-  contactEmail: string;
-  phone: string;
-  city: string;
-  adminName: string;
-  adminEmail: string;
-  monthlyFee: number;
-  billingCycle: 'Monthly' | 'Annual';
-  nextRenewalDate: string;
-  paymentStatus: 'Paid' | 'Pending' | 'Overdue';
-  joinedDate: string;
-}
-
-interface TenantAdmin {
-  id: string;
-  name: string;
-  email: string;
-  phone: string;
-  companyId: string;
-  companyName: string;
-  designation: string;
-  department: string;
-  assignedProjectsCount: number;
-  status: 'Active' | 'Suspended';
-  lastLogin: string;
-  tempPass: string;
-  joinedDate: string;
-}
+import { Company, User } from '@/types';
 
 interface SaaSPlan {
   id: string;
@@ -112,11 +81,36 @@ interface SaaSInvoice {
   status: 'Paid' | 'Pending' | 'Overdue';
   paymentMethod: string;
   paymentRef?: string;
+  cin?: string;
+  reraNumber?: string;
+  gstin?: string;
+}
+
+// Password Generator Utility
+function generateSecurePassword(prefix: string = 'Builder'): string {
+  const clean = prefix.replace(/[^a-zA-Z]/g, '') || 'Builder';
+  const symbols = ['@', '#', '$', '!'];
+  const sym = symbols[Math.floor(Math.random() * symbols.length)];
+  const randChars = 'abcdefghjkmnpqrstuvwxyz23456789';
+  let rand = '';
+  for (let i = 0; i < 3; i++) {
+    rand += randChars.charAt(Math.floor(Math.random() * randChars.length));
+  }
+  return `${clean.charAt(0).toUpperCase() + clean.slice(1).toLowerCase()}${sym}2026!${rand}`;
 }
 
 export default function SuperAdminPage() {
   const router = useRouter();
-  const { setCompanyId, setRole } = useTenant();
+  const {
+    allCompanies,
+    allUsers,
+    addCompany,
+    updateCompany,
+    addUser,
+    updateUser,
+    setCompanyId,
+    setRole,
+  } = useTenant();
 
   // Tab State
   const [activeTab, setActiveTab] = useState<'companies' | 'admins' | 'subscriptions' | 'invoices' | 'audit' | 'settings'>('companies');
@@ -127,180 +121,46 @@ export default function SuperAdminPage() {
   const [planFilter, setPlanFilter] = useState('All');
   const [invoiceStatusFilter, setInvoiceStatusFilter] = useState('All');
 
-  // Modals
+  // Modals State
   const [provisionModalOpen, setProvisionModalOpen] = useState(false);
   const [adminModalOpen, setAdminModalOpen] = useState(false);
   const [invoiceModalOpen, setInvoiceModalOpen] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState<SaaSInvoice | null>(null);
-  const [selectedAdminForCredentials, setSelectedAdminForCredentials] = useState<TenantAdmin | null>(null);
+  const [selectedAdminForCredentials, setSelectedAdminForCredentials] = useState<User | null>(null);
   const [subscriptionModalOpen, setSubscriptionModalOpen] = useState(false);
-  const [selectedCompanyForSub, setSelectedCompanyForSub] = useState<TenantCompany | null>(null);
+  const [selectedCompanyForSub, setSelectedCompanyForSub] = useState<Company | null>(null);
+  const [companyDetailsModalOpen, setCompanyDetailsModalOpen] = useState(false);
+  const [selectedCompanyDetails, setSelectedCompanyDetails] = useState<Company | null>(null);
+
+  // Newly Provisioned Credential Handoff Modal
+  const [credentialHandoff, setCredentialHandoff] = useState<{
+    company: Company;
+    admin: User;
+    rawPassword: string;
+    loginUrl: string;
+  } | null>(null);
 
   // Success Notification banner
   const [bannerMessage, setBannerMessage] = useState<string | null>(null);
+  const [copiedKey, setCopiedKey] = useState<string | null>(null);
 
   const showBanner = (msg: string) => {
     setBannerMessage(msg);
-    setTimeout(() => setBannerMessage(null), 3500);
+    setTimeout(() => setBannerMessage(null), 4000);
   };
 
-  // 1. Initial Tenant Companies Data
-  const [companies, setCompanies] = useState<TenantCompany[]>([
-    {
-      id: 'comp-prestige',
-      name: 'Prestige Estates Projects Ltd',
-      code: 'PRESTIGE',
-      plan: 'Enterprise',
-      status: 'Active',
-      userLimit: 50,
-      usersCount: 42,
-      projectLimit: 25,
-      projectsCount: 8,
-      unitsCount: 480,
-      contactEmail: 'crm-admin@prestigeconstructions.com',
-      phone: '+91 80 2559 1080',
-      city: 'Bangalore',
-      adminName: 'Vikramaditya Rao',
-      adminEmail: 'vikram.rao@prestigeconstructions.com',
-      monthlyFee: 89999,
-      billingCycle: 'Annual',
-      nextRenewalDate: '2027-01-15',
-      paymentStatus: 'Paid',
-      joinedDate: '2024-01-15',
-    },
-    {
-      id: 'comp-godrej',
-      name: 'Godrej Skyline Developers',
-      code: 'GODREJ',
-      plan: 'Professional',
-      status: 'Active',
-      userLimit: 20,
-      usersCount: 18,
-      projectLimit: 10,
-      projectsCount: 4,
-      unitsCount: 220,
-      contactEmail: 'support@godrejskyline.com',
-      phone: '+91 22 6796 5656',
-      city: 'Mumbai',
-      adminName: 'Priya Nair',
-      adminEmail: 'priya.nair@godrejskyline.com',
-      monthlyFee: 34999,
-      billingCycle: 'Monthly',
-      nextRenewalDate: '2026-11-20',
-      paymentStatus: 'Paid',
-      joinedDate: '2024-03-20',
-    },
-    {
-      id: 'comp-urbannest',
-      name: 'Urban Nest Properties',
-      code: 'URBAN',
-      plan: 'Starter',
-      status: 'Active',
-      userLimit: 5,
-      usersCount: 5,
-      projectLimit: 2,
-      projectsCount: 2,
-      unitsCount: 80,
-      contactEmail: 'sales@urbannest.in',
-      phone: '+91 11 4152 7890',
-      city: 'Gurugram',
-      adminName: 'Rajesh Khurana',
-      adminEmail: 'rajesh.k@urbannest.in',
-      monthlyFee: 14999,
-      billingCycle: 'Monthly',
-      nextRenewalDate: '2026-11-10',
-      paymentStatus: 'Pending',
-      joinedDate: '2024-05-10',
-    },
-    {
-      id: 'comp-sobha',
-      name: 'Sobha Luxury Heights',
-      code: 'SOBHA',
-      plan: 'Professional',
-      status: 'Active',
-      userLimit: 20,
-      usersCount: 12,
-      projectLimit: 10,
-      projectsCount: 3,
-      unitsCount: 140,
-      contactEmail: 'corp@sobhahomes.in',
-      phone: '+91 40 4011 2233',
-      city: 'Hyderabad',
-      adminName: 'Tarun Varma',
-      adminEmail: 'tarun.varma@sobhahomes.in',
-      monthlyFee: 34999,
-      billingCycle: 'Monthly',
-      nextRenewalDate: '2026-10-25',
-      paymentStatus: 'Overdue',
-      joinedDate: '2024-07-01',
-    },
-  ]);
+  const copyToClipboard = (text: string, label: string) => {
+    try {
+      navigator.clipboard.writeText(text);
+      setCopiedKey(label);
+      showBanner(`${label} copied to clipboard!`);
+      setTimeout(() => setCopiedKey(null), 2000);
+    } catch {
+      showBanner(`Copied: ${text}`);
+    }
+  };
 
-  // 2. Initial Tenant Admins Data
-  const [tenantAdmins, setTenantAdmins] = useState<TenantAdmin[]>([
-    {
-      id: 'adm-1',
-      name: 'Vikramaditya Rao',
-      email: 'vikram.rao@prestigeconstructions.com',
-      phone: '+91 98450 78901',
-      companyId: 'comp-prestige',
-      companyName: 'Prestige Estates Projects Ltd',
-      designation: 'Managing Director & VP Sales',
-      department: 'Executive Leadership',
-      assignedProjectsCount: 8,
-      status: 'Active',
-      lastLogin: 'Today, 08:42 AM',
-      tempPass: 'admin123',
-      joinedDate: '2024-01-15',
-    },
-    {
-      id: 'adm-2',
-      name: 'Priya Nair',
-      email: 'priya.nair@godrejskyline.com',
-      phone: '+91 98200 45678',
-      companyId: 'comp-godrej',
-      companyName: 'Godrej Skyline Developers',
-      designation: 'Head of Operations & Co-Founder',
-      department: 'Corporate Strategy',
-      assignedProjectsCount: 4,
-      status: 'Active',
-      lastLogin: 'Yesterday, 06:15 PM',
-      tempPass: 'admin123',
-      joinedDate: '2024-03-20',
-    },
-    {
-      id: 'adm-3',
-      name: 'Rajesh Khurana',
-      email: 'rajesh.k@urbannest.in',
-      phone: '+91 98111 89234',
-      companyId: 'comp-urbannest',
-      companyName: 'Urban Nest Properties',
-      designation: 'Managing Partner',
-      department: 'Executive Management',
-      assignedProjectsCount: 2,
-      status: 'Active',
-      lastLogin: '2 days ago',
-      tempPass: 'admin123',
-      joinedDate: '2024-05-10',
-    },
-    {
-      id: 'adm-4',
-      name: 'Tarun Varma',
-      email: 'tarun.varma@sobhahomes.in',
-      phone: '+91 98490 11223',
-      companyId: 'comp-sobha',
-      companyName: 'Sobha Luxury Heights',
-      designation: 'VP Commercial Sales',
-      department: 'Sales & Expansion',
-      assignedProjectsCount: 3,
-      status: 'Active',
-      lastLogin: '4 days ago',
-      tempPass: 'admin123',
-      joinedDate: '2024-07-01',
-    },
-  ]);
-
-  // 3. SaaS Plans
+  // SaaS Plans Specification
   const [plans, setPlans] = useState<SaaSPlan[]>([
     {
       id: 'plan-starter',
@@ -366,7 +226,7 @@ export default function SuperAdminPage() {
     },
   ]);
 
-  // 4. SaaS Monthly Invoices
+  // SaaS Invoices
   const [invoices, setInvoices] = useState<SaaSInvoice[]>([
     {
       id: 'inv-1',
@@ -383,6 +243,9 @@ export default function SuperAdminPage() {
       status: 'Paid',
       paymentMethod: 'Razorpay Auto-Debit (Corporate HDFC)',
       paymentRef: 'rzp_pay_99812A980',
+      cin: 'L45200KA1997PLC022365',
+      reraNumber: 'PRM/KA/RERA/1251/310/PR/170915/000123',
+      gstin: '29AABCP1234F1Z1',
     },
     {
       id: 'inv-2',
@@ -399,6 +262,9 @@ export default function SuperAdminPage() {
       status: 'Paid',
       paymentMethod: 'Bank Transfer (NEFT)',
       paymentRef: 'NEFT-ICIC-20261102-881',
+      cin: 'L74120MH1985PLC035308',
+      reraNumber: 'P51800000832',
+      gstin: '27AAACG0532N1Z4',
     },
     {
       id: 'inv-3',
@@ -413,6 +279,9 @@ export default function SuperAdminPage() {
       dueDate: '2026-11-10',
       status: 'Pending',
       paymentMethod: 'Razorpay Mandate (Pending Authorization)',
+      cin: 'U45200DL2018PTC328901',
+      reraNumber: 'RC/REP/HARERA/GGM/2018/14',
+      gstin: '07AABCU9876D1Z2',
     },
     {
       id: 'inv-4',
@@ -427,6 +296,9 @@ export default function SuperAdminPage() {
       dueDate: '2026-10-25',
       status: 'Overdue',
       paymentMethod: 'Corporate Cheque (Awaiting Clearance)',
+      cin: 'L45201KA1995PLC018475',
+      reraNumber: 'P02400001928',
+      gstin: '36AABCS1234K1Z8',
     },
     {
       id: 'inv-5',
@@ -443,10 +315,13 @@ export default function SuperAdminPage() {
       status: 'Paid',
       paymentMethod: 'Razorpay Auto-Debit',
       paymentRef: 'rzp_pay_88712A101',
+      cin: 'L45200KA1997PLC022365',
+      reraNumber: 'PRM/KA/RERA/1251/310/PR/170915/000123',
+      gstin: '29AABCP1234F1Z1',
     },
   ]);
 
-  // 5. New Tenant Provisioning Form State
+  // Provisioning Form State (with Auto Password & Company Reg Numbers)
   const [provisionForm, setProvisionForm] = useState({
     companyName: '',
     code: '',
@@ -454,49 +329,104 @@ export default function SuperAdminPage() {
     phone: '',
     email: '',
     plan: 'Professional' as 'Starter' | 'Professional' | 'Enterprise',
+    userLimit: 20,
+    projectLimit: 10,
+    // Registration Details
+    registrationNumber: '',
+    cin: '',
+    reraNumber: '',
+    gstin: '',
+    address: '',
+    // Admin Account Credentials
     adminName: '',
     adminEmail: '',
     adminPhone: '',
-    userLimit: 20,
-    projectLimit: 10,
+    adminPassword: '',
+    showPassword: true,
+  });
+
+  // Re-generate password when modal opens or code changes
+  useEffect(() => {
+    if (provisionModalOpen && !provisionForm.adminPassword) {
+      setProvisionForm((prev) => ({
+        ...prev,
+        adminPassword: generateSecurePassword(prev.code || 'Builder'),
+      }));
+    }
+  }, [provisionModalOpen]);
+
+  // Helper to autofill realistic Indian corporate registration details
+  const handleAutoFillRegDetails = () => {
+    const rawCode = provisionForm.code || provisionForm.companyName.slice(0, 4).toUpperCase() || 'BLDR';
+    const cityCode = provisionForm.city.toLowerCase().includes('mumbai')
+      ? 'MH'
+      : provisionForm.city.toLowerCase().includes('delhi') || provisionForm.city.toLowerCase().includes('gurugram')
+      ? 'DL'
+      : provisionForm.city.toLowerCase().includes('hyderabad')
+      ? 'TG'
+      : 'KA';
+    const gstState = cityCode === 'MH' ? '27' : cityCode === 'DL' ? '07' : cityCode === 'TG' ? '36' : '29';
+    const randNum = Math.floor(100000 + Math.random() * 900000);
+
+    const generatedCIN = `U45200${cityCode}2022PTC${randNum}`;
+    const generatedRERA = `PRM/${cityCode}/RERA/1251/310/PR/220515/${Math.floor(100000 + Math.random() * 900000)}`;
+    const generatedGSTIN = `${gstState}AABCE${Math.floor(1000 + Math.random() * 9000)}F1Z${Math.floor(1 + Math.random() * 9)}`;
+    const generatedAddress = `${provisionForm.companyName || 'Corporate'} Towers, Plot 14, CBD Commercial Area, ${provisionForm.city}`;
+
+    setProvisionForm((prev) => ({
+      ...prev,
+      registrationNumber: generatedCIN,
+      cin: generatedCIN,
+      reraNumber: generatedRERA,
+      gstin: generatedGSTIN,
+      address: generatedAddress,
+    }));
+    showBanner('Auto-generated realistic CIN, RERA ID, and GSTIN registration numbers!');
+  };
+
+  // Add Admin Form State
+  const [newAdminForm, setNewAdminForm] = useState({
+    companyId: allCompanies[0]?.id || 'comp-prestige',
+    name: '',
+    email: '',
+    phone: '',
+    designation: 'Managing Director & VP Sales',
+    department: 'Executive Leadership',
+    password: generateSecurePassword('Admin'),
+    showPassword: true,
   });
 
   // KPI Calculations
   const metrics = useMemo(() => {
-    const totalMRR = companies.reduce((acc, c) => acc + (c.status === 'Active' ? c.monthlyFee : 0), 0);
+    const totalMRR = allCompanies.reduce((acc, c) => acc + (c.status === 'Active' ? (c.monthlyFee || 34999) : 0), 0);
     const totalARR = totalMRR * 12;
     const pendingAmount = invoices
       .filter((i) => i.status === 'Pending' || i.status === 'Overdue')
       .reduce((acc, i) => acc + i.totalAmount, 0);
-    const totalUsers = companies.reduce((acc, c) => acc + c.usersCount, 0);
-    const totalUnits = companies.reduce((acc, c) => acc + c.unitsCount, 0);
-    const activeTenants = companies.filter((c) => c.status === 'Active').length;
+    const totalUsers = allUsers.length;
+    const totalUnits = allCompanies.reduce((acc, c) => acc + (c.unitsCount || 50), 0);
+    const activeTenants = allCompanies.filter((c) => c.status === 'Active').length;
 
     return { totalMRR, totalARR, pendingAmount, totalUsers, totalUnits, activeTenants };
-  }, [companies, invoices]);
+  }, [allCompanies, allUsers, invoices]);
 
   // Action: 1-Click Impersonate Tenant
-  const handleImpersonateTenant = (company: TenantCompany) => {
-    setCompanyId(company.id as any);
+  const handleImpersonateTenant = (company: Company) => {
+    setCompanyId(company.id);
     setRole('COMPANY_ADMIN');
     showBanner(`Logged in as Tenant Owner of "${company.name}". Switching to Live CRM...`);
     setTimeout(() => {
       router.push('/dashboard');
-    }, 800);
+    }, 700);
   };
 
   // Action: Toggle Company Status
   const handleToggleCompanyStatus = (companyId: string) => {
-    setCompanies((prev) =>
-      prev.map((c) => {
-        if (c.id === companyId) {
-          const nextStatus = c.status === 'Active' ? 'Suspended' : 'Active';
-          showBanner(`Tenant "${c.name}" status changed to ${nextStatus}.`);
-          return { ...c, status: nextStatus };
-        }
-        return c;
-      })
-    );
+    const target = allCompanies.find((c) => c.id === companyId);
+    if (!target) return;
+    const nextStatus = target.status === 'Active' ? 'Suspended' : 'Active';
+    updateCompany(companyId, { status: nextStatus });
+    showBanner(`Tenant "${target.name}" status changed to ${nextStatus}.`);
   };
 
   // Action: Mark Invoice Paid
@@ -525,78 +455,188 @@ export default function SuperAdminPage() {
   // Action: Provision New Tenant Submit
   const handleProvisionSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const newId = `comp-${provisionForm.code.toLowerCase()}`;
+    const rawCode = (provisionForm.code || provisionForm.companyName.slice(0, 4)).toUpperCase().replace(/[^A-Z0-9]/g, '');
+    const newCompanyId = `comp-${rawCode.toLowerCase()}`;
     const monthlyFee =
-      provisionForm.plan === 'Starter' ? 14999 : provisionForm.plan === 'Professional' ? 34999 : 89999;
+      provisionForm.plan === 'Starter' ? 14999 : provisionForm.plan === 'Enterprise' ? 89999 : 34999;
 
-    const newCompany: TenantCompany = {
-      id: newId,
-      name: provisionForm.companyName,
-      code: provisionForm.code.toUpperCase(),
-      plan: provisionForm.plan,
-      status: 'Active',
-      userLimit: provisionForm.userLimit,
-      usersCount: 1,
-      projectLimit: provisionForm.projectLimit,
-      projectsCount: 1,
-      unitsCount: 50,
-      contactEmail: provisionForm.email,
-      phone: provisionForm.phone,
-      city: provisionForm.city,
-      adminName: provisionForm.adminName,
-      adminEmail: provisionForm.adminEmail,
-      monthlyFee,
-      billingCycle: 'Monthly',
-      nextRenewalDate: '2026-12-04',
-      paymentStatus: 'Paid',
-      joinedDate: new Date().toISOString().split('T')[0],
-    };
+    const cinNumber = provisionForm.registrationNumber || provisionForm.cin || `U45200KA2024PTC${Math.floor(100000 + Math.random() * 900000)}`;
+    const reraId = provisionForm.reraNumber || `PRM/KA/RERA/1251/310/PR/${Math.floor(100000 + Math.random() * 900000)}`;
+    const gstinId = provisionForm.gstin || `29AAAC${rawCode.slice(0, 4)}1234F1Z5`;
+    const officeAddress = provisionForm.address || `${provisionForm.companyName} Tech Tower, CBD, ${provisionForm.city}`;
 
-    const newAdmin: TenantAdmin = {
-      id: `adm-${Date.now()}`,
-      name: provisionForm.adminName,
-      email: provisionForm.adminEmail,
-      phone: provisionForm.adminPhone || provisionForm.phone,
-      companyId: newId,
+    const securePass = provisionForm.adminPassword || generateSecurePassword(rawCode);
+
+    // Call tenantContext addCompany to register into global multi-tenant state and localStorage!
+    const result = addCompany(
+      {
+        id: newCompanyId,
+        name: provisionForm.companyName,
+        code: rawCode,
+        plan: provisionForm.plan,
+        status: 'Active',
+        userLimit: provisionForm.userLimit,
+        projectLimit: provisionForm.projectLimit,
+        contactEmail: provisionForm.email || provisionForm.adminEmail,
+        phone: provisionForm.phone,
+        city: provisionForm.city,
+        registrationNumber: cinNumber,
+        cin: cinNumber,
+        reraNumber: reraId,
+        gstin: gstinId,
+        address: officeAddress,
+        monthlyFee,
+        billingCycle: 'Monthly',
+        nextRenewalDate: '2026-12-04',
+        paymentStatus: 'Paid',
+        adminName: provisionForm.adminName,
+        adminEmail: provisionForm.adminEmail,
+        usersCount: 1,
+        projectsCount: 1,
+        unitsCount: 50,
+      },
+      {
+        name: provisionForm.adminName,
+        email: provisionForm.adminEmail,
+        phone: provisionForm.adminPhone || provisionForm.phone,
+        password: securePass,
+        role: 'COMPANY_ADMIN',
+        department: 'Executive Leadership',
+        designation: 'Managing Director & Builder Admin',
+      }
+    );
+
+    // Also issue initial SaaS invoice for billing tracking
+    const newInvoice: SaaSInvoice = {
+      id: `inv-${Date.now()}`,
+      invoiceNumber: `INV-2026-11-${Math.floor(100 + Math.random() * 900)}`,
+      companyId: newCompanyId,
       companyName: provisionForm.companyName,
-      designation: 'Managing Director & VP Sales',
-      department: 'Executive Management',
-      assignedProjectsCount: 1,
-      status: 'Active',
-      lastLogin: 'Never (Just Provisioned)',
-      tempPass: 'admin123',
-      joinedDate: new Date().toISOString().split('T')[0],
+      planName: provisionForm.plan,
+      billingPeriod: 'Nov 01 - Nov 30, 2026',
+      baseAmount: monthlyFee,
+      gstAmount: monthlyFee * 0.18,
+      totalAmount: monthlyFee * 1.18,
+      dueDate: '2026-11-15',
+      paidDate: new Date().toISOString().split('T')[0],
+      status: 'Paid',
+      paymentMethod: 'Platform Setup Auto-Receipt',
+      paymentRef: `PROV-TX-${Date.now().toString().slice(-6)}`,
+      cin: cinNumber,
+      reraNumber: reraId,
+      gstin: gstinId,
     };
+    setInvoices([newInvoice, ...invoices]);
 
-    setCompanies([newCompany, ...companies]);
-    setTenantAdmins([newAdmin, ...tenantAdmins]);
+    // Close provisioning modal and open the Credential Handoff dialog!
     setProvisionModalOpen(false);
-    showBanner(`Developer tenant "${newCompany.name}" onboarded successfully with 1 Admin account!`);
+    setCredentialHandoff({
+      company: result.company,
+      admin: result.admin,
+      rawPassword: securePass,
+      loginUrl: typeof window !== 'undefined' ? `${window.location.origin}/login?portal=admin` : 'https://estate-flow-emoticonsolutiins.vercel.app/login?portal=admin',
+    });
+
+    showBanner(`Developer tenant "${result.company.name}" successfully provisioned and live!`);
+
+    // Reset form
+    setProvisionForm({
+      companyName: '',
+      code: '',
+      city: 'Bangalore',
+      phone: '',
+      email: '',
+      plan: 'Professional',
+      userLimit: 20,
+      projectLimit: 10,
+      registrationNumber: '',
+      cin: '',
+      reraNumber: '',
+      gstin: '',
+      address: '',
+      adminName: '',
+      adminEmail: '',
+      adminPhone: '',
+      adminPassword: '',
+      showPassword: true,
+    });
+  };
+
+  // Action: Add Admin Submit
+  const handleAddAdminSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const company = allCompanies.find((c) => c.id === newAdminForm.companyId) || allCompanies[0];
+    const createdUser = addUser({
+      name: newAdminForm.name,
+      email: newAdminForm.email,
+      phone: newAdminForm.phone,
+      password: newAdminForm.password,
+      role: 'COMPANY_ADMIN',
+      companyId: newAdminForm.companyId,
+      designation: newAdminForm.designation,
+      department: newAdminForm.department,
+    });
+
+    setAdminModalOpen(false);
+    setSelectedAdminForCredentials(createdUser);
+    showBanner(`New Admin profile "${createdUser.name}" added to ${company.name}!`);
+
+    setNewAdminForm({
+      companyId: allCompanies[0]?.id || 'comp-prestige',
+      name: '',
+      email: '',
+      phone: '',
+      designation: 'Managing Director & VP Sales',
+      department: 'Executive Leadership',
+      password: generateSecurePassword('Admin'),
+      showPassword: true,
+    });
+  };
+
+  // Action: Update Subscription Submit
+  const handleSubscriptionSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedCompanyForSub) return;
+
+    const plan = selectedCompanyForSub.plan;
+    const monthlyFee = plan === 'Starter' ? 14999 : plan === 'Enterprise' ? 89999 : 34999;
+
+    updateCompany(selectedCompanyForSub.id, {
+      plan,
+      userLimit: selectedCompanyForSub.userLimit,
+      projectLimit: selectedCompanyForSub.projectLimit,
+      monthlyFee,
+    });
+
+    setSubscriptionModalOpen(false);
+    showBanner(`Subscription updated for ${selectedCompanyForSub.name} (${plan} Tier)!`);
   };
 
   // Filtered Companies
   const filteredCompanies = useMemo(() => {
-    return companies.filter((c) => {
+    return allCompanies.filter((c) => {
       const matchSearch =
         c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         c.code.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        c.city.toLowerCase().includes(searchQuery.toLowerCase());
+        c.city.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (c.registrationNumber && c.registrationNumber.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        (c.reraNumber && c.reraNumber.toLowerCase().includes(searchQuery.toLowerCase()));
       const matchStatus = statusFilter === 'All' || c.status === statusFilter;
       const matchPlan = planFilter === 'All' || c.plan === planFilter;
       return matchSearch && matchStatus && matchPlan;
     });
-  }, [companies, searchQuery, statusFilter, planFilter]);
+  }, [allCompanies, searchQuery, statusFilter, planFilter]);
 
-  // Filtered Admins
+  // Filtered Admins (from allUsers)
   const filteredAdmins = useMemo(() => {
-    return tenantAdmins.filter((a) => {
-      return (
-        a.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        a.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        a.companyName.toLowerCase().includes(searchQuery.toLowerCase())
-      );
+    return allUsers.filter((u) => {
+      const matchSearch =
+        u.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        u.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        u.designation.toLowerCase().includes(searchQuery.toLowerCase());
+      return matchSearch;
     });
-  }, [tenantAdmins, searchQuery]);
+  }, [allUsers, searchQuery]);
 
   // Filtered Invoices
   const filteredInvoices = useMemo(() => {
@@ -630,7 +670,7 @@ export default function SuperAdminPage() {
                   </span>
                 </div>
                 <p className="text-[11px] text-slate-300">
-                  Global Multi-Tenant Authority • All Developer Accounts, Subscriptions & Invoicing
+                  Global Multi-Tenant Authority • Builder Registration (CIN/RERA), Password Generator & Invoicing
                 </p>
               </div>
             </div>
@@ -667,7 +707,7 @@ export default function SuperAdminPage() {
 
       {/* Global Notification Banner */}
       {bannerMessage && (
-        <div className="bg-emerald-600 text-white text-xs font-bold py-2.5 px-6 text-center shadow-inner flex items-center justify-center gap-2 animate-in fade-in">
+        <div className="bg-emerald-600 text-white text-xs font-bold py-2.5 px-6 text-center shadow-inner flex items-center justify-center gap-2 animate-in fade-in sticky top-18 z-30">
           <CheckCircle2 size={16} />
           <span>{bannerMessage}</span>
         </div>
@@ -700,10 +740,10 @@ export default function SuperAdminPage() {
               </div>
             </div>
             <p className="text-2xl font-black text-amber-600 mt-2">
-              ₹{(metrics.pendingAmount).toLocaleString('en-IN')}
+              ₹{metrics.pendingAmount.toLocaleString('en-IN')}
             </p>
             <span className="text-[11px] text-slate-500 mt-1 block">
-              2 Accounts awaiting clearance
+              {invoices.filter((i) => i.status !== 'Paid').length} Accounts awaiting clearance
             </span>
           </div>
 
@@ -718,7 +758,7 @@ export default function SuperAdminPage() {
               {metrics.activeTenants} Developers
             </p>
             <span className="text-[11px] text-slate-500 mt-1 block">
-              {companies.length} Total Registered
+              {allCompanies.length} Registered & Isolated
             </span>
           </div>
 
@@ -757,10 +797,10 @@ export default function SuperAdminPage() {
         <div className="bg-white rounded-2xl border border-[#E3E8EF] p-2 shadow-xs">
           <div className="flex flex-wrap items-center gap-1.5 text-xs font-bold">
             {[
-              { id: 'companies', label: 'Tenant Companies (Builders)', count: companies.length, icon: Building },
-              { id: 'admins', label: 'Company Admins & Profiles', count: tenantAdmins.length, icon: UserCheck },
+              { id: 'companies', label: 'Tenant Companies (Builders)', count: allCompanies.length, icon: Building },
+              { id: 'admins', label: 'Company Admins & Profiles', count: allUsers.length, icon: UserCheck },
               { id: 'subscriptions', label: 'Subscription Manager', count: plans.length, icon: CreditCard },
-              { id: 'invoices', label: 'Monthly SaaS Billing & Dues', count: invoices.filter(i => i.status !== 'Paid').length, icon: Receipt, badgeColor: 'bg-amber-100 text-amber-800' },
+              { id: 'invoices', label: 'Monthly SaaS Billing & Dues', count: invoices.filter((i) => i.status !== 'Paid').length, icon: Receipt, badgeColor: 'bg-amber-100 text-amber-800' },
               { id: 'audit', label: 'Platform Audit Trail', icon: ShieldAlert },
               { id: 'settings', label: 'Cloud Infrastructure & Health', icon: Server },
             ].map((tab) => {
@@ -803,7 +843,7 @@ export default function SuperAdminPage() {
               <div>
                 <h2 className="text-base font-bold text-[#17324D]">Registered Real Estate Developers</h2>
                 <p className="text-xs text-slate-500">
-                  Manage multi-tenant developer isolation, active subscriptions, seat allocations, and 1-click company impersonation.
+                  Manage multi-tenant isolation, verified CIN/RERA numbers, active subscription tiers, and 1-click tenant impersonation.
                 </p>
               </div>
 
@@ -813,10 +853,10 @@ export default function SuperAdminPage() {
                   <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                   <input
                     type="text"
-                    placeholder="Search developer, code, city..."
+                    placeholder="Search developer, CIN, RERA, city..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-56 h-9 pl-9 pr-3 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-[#3478C9]"
+                    className="w-64 h-9 pl-9 pr-3 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-[#3478C9]"
                   />
                 </div>
 
@@ -840,6 +880,14 @@ export default function SuperAdminPage() {
                   <option value="Active">Active Tenants</option>
                   <option value="Suspended">Suspended</option>
                 </select>
+
+                <button
+                  onClick={() => setProvisionModalOpen(true)}
+                  className="h-9 px-3.5 bg-teal-600 hover:bg-teal-700 text-white rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all shadow-xs"
+                >
+                  <Plus size={14} />
+                  <span>Onboard Builder</span>
+                </button>
               </div>
             </div>
 
@@ -849,13 +897,12 @@ export default function SuperAdminPage() {
                 <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold uppercase text-[10px]">
                   <tr>
                     <th className="py-3.5 px-4">Developer & Code</th>
-                    <th className="py-3.5 px-4">Headquarters</th>
+                    <th className="py-3.5 px-4">Company Registration (CIN & RERA)</th>
                     <th className="py-3.5 px-4">Active Plan & Fee</th>
-                    <th className="py-3.5 px-4">User Seats Quota</th>
-                    <th className="py-3.5 px-4">Project & Units</th>
-                    <th className="py-3.5 px-4">Primary Admin</th>
+                    <th className="py-3.5 px-4">Seats & Inventory</th>
+                    <th className="py-3.5 px-4">Primary Admin Account</th>
                     <th className="py-3.5 px-4">SaaS Billing</th>
-                    <th className="py-3.5 px-4">Tenant Status</th>
+                    <th className="py-3.5 px-4">Status</th>
                     <th className="py-3.5 px-4 text-right">Super Actions</th>
                   </tr>
                 </thead>
@@ -863,17 +910,44 @@ export default function SuperAdminPage() {
                   {filteredCompanies.map((c) => (
                     <tr key={c.id} className="hover:bg-slate-50/70 transition-colors h-14">
                       <td className="py-3.5 px-4">
-                        <div className="flex items-center gap-2.5">
-                          <div className="w-8 h-8 rounded-lg bg-[#17324D] text-white flex items-center justify-center font-bold text-xs">
+                        <button
+                          onClick={() => {
+                            setSelectedCompanyDetails(c);
+                            setCompanyDetailsModalOpen(true);
+                          }}
+                          className="flex items-center gap-2.5 text-left group"
+                        >
+                          <div className="w-9 h-9 rounded-lg bg-[#17324D] text-white flex items-center justify-center font-black text-xs shrink-0 group-hover:bg-[#3478C9] transition-colors">
                             {c.code.slice(0, 2)}
                           </div>
                           <div>
-                            <p className="font-bold text-slate-900">{c.name}</p>
-                            <span className="text-[10px] font-mono text-[#3478C9] font-bold">{c.code}</span>
+                            <p className="font-bold text-slate-900 group-hover:text-[#3478C9] transition-colors flex items-center gap-1">
+                              <span>{c.name}</span>
+                              <FileText size={11} className="text-slate-400 opacity-0 group-hover:opacity-100" />
+                            </p>
+                            <span className="text-[10px] font-mono text-slate-500 font-semibold">{c.city} • {c.code}</span>
+                          </div>
+                        </button>
+                      </td>
+                      <td className="py-3.5 px-4">
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-[10px] font-mono font-bold text-slate-800 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200">
+                              CIN: {c.registrationNumber || c.cin || 'CIN-NOT-REGISTERED'}
+                            </span>
+                            <button
+                              onClick={() => copyToClipboard(c.registrationNumber || c.cin || '', 'CIN')}
+                              className="text-slate-400 hover:text-slate-700 p-0.5"
+                              title="Copy CIN"
+                            >
+                              <Copy size={11} />
+                            </button>
+                          </div>
+                          <div className="flex items-center gap-1.5 text-[10px] text-teal-700 font-mono">
+                            <span>RERA: {c.reraNumber || 'PRM/RERA/PENDING'}</span>
                           </div>
                         </div>
                       </td>
-                      <td className="py-3.5 px-4 text-slate-600 font-medium">{c.city}</td>
                       <td className="py-3.5 px-4">
                         <div>
                           <span
@@ -887,36 +961,29 @@ export default function SuperAdminPage() {
                           >
                             {c.plan} Tier
                           </span>
-                          <span className="text-[11px] text-slate-500 font-bold block mt-0.5">
-                            ₹{c.monthlyFee.toLocaleString('en-IN')}/mo
+                          <span className="text-[11px] text-slate-600 font-bold block mt-0.5">
+                            ₹{(c.monthlyFee || (c.plan === 'Enterprise' ? 89999 : c.plan === 'Starter' ? 14999 : 34999)).toLocaleString('en-IN')}/mo
                           </span>
                         </div>
                       </td>
                       <td className="py-3.5 px-4">
                         <div className="space-y-1">
                           <div className="flex items-center justify-between text-[11px] font-semibold">
-                            <span>{c.usersCount} / {c.userLimit} Seats</span>
+                            <span>{c.usersCount || 1} / {c.userLimit} Seats</span>
                             <span className="text-slate-400 font-mono">
-                              {Math.round((c.usersCount / c.userLimit) * 100)}%
+                              {Math.round(((c.usersCount || 1) / c.userLimit) * 100)}%
                             </span>
                           </div>
-                          <div className="w-24 h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                            <div
-                              className={`h-full rounded-full ${
-                                c.usersCount >= c.userLimit ? 'bg-rose-500' : 'bg-teal-500'
-                              }`}
-                              style={{ width: `${Math.min(100, (c.usersCount / c.userLimit) * 100)}%` }}
-                            ></div>
+                          <div className="text-[10px] text-slate-500 font-medium">
+                            {c.projectsCount || 1} Projects • {c.unitsCount || 50} Units
                           </div>
                         </div>
                       </td>
                       <td className="py-3.5 px-4">
-                        <p className="font-bold text-slate-800">{c.projectsCount} Projects</p>
-                        <span className="text-[11px] text-slate-400 font-mono">{c.unitsCount} Units Tracked</span>
-                      </td>
-                      <td className="py-3.5 px-4">
-                        <p className="font-semibold text-slate-900">{c.adminName}</p>
-                        <span className="text-[10px] text-slate-400 block truncate max-w-[140px]">{c.adminEmail}</span>
+                        <p className="font-semibold text-slate-900">{c.adminName || 'Admin User'}</p>
+                        <span className="text-[10px] text-slate-400 block truncate max-w-[150px]">
+                          {c.adminEmail || c.contactEmail}
+                        </span>
                       </td>
                       <td className="py-3.5 px-4">
                         <span
@@ -928,10 +995,10 @@ export default function SuperAdminPage() {
                               : 'bg-rose-50 text-rose-700 border border-rose-200'
                           }`}
                         >
-                          {c.paymentStatus}
+                          {c.paymentStatus || 'Paid'}
                         </span>
                         <span className="text-[10px] text-slate-400 block mt-0.5 font-mono">
-                          Renews {c.nextRenewalDate}
+                          Renews {c.nextRenewalDate || '2026-12-04'}
                         </span>
                       </td>
                       <td className="py-3.5 px-4">
@@ -998,7 +1065,7 @@ export default function SuperAdminPage() {
               <div>
                 <h2 className="text-base font-bold text-[#17324D]">Tenant Administrators & Developer Owners</h2>
                 <p className="text-xs text-slate-500">
-                  Inspect tenant administrator identities, verified passwords, associated developer portfolios, and 1-click admin login.
+                  Inspect tenant administrator identities, view generated passwords, and direct 1-click admin login.
                 </p>
               </div>
 
@@ -1016,7 +1083,7 @@ export default function SuperAdminPage() {
 
                 <button
                   onClick={() => setAdminModalOpen(true)}
-                  className="h-9 px-3.5 bg-[#17324D] hover:bg-[#244761] text-white rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all"
+                  className="h-9 px-3.5 bg-[#17324D] hover:bg-[#244761] text-white rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all shadow-xs"
                 >
                   <Plus size={14} />
                   <span>Add Tenant Admin</span>
@@ -1033,83 +1100,83 @@ export default function SuperAdminPage() {
                     <th className="py-3.5 px-4">Developer Company</th>
                     <th className="py-3.5 px-4">Designation & Department</th>
                     <th className="py-3.5 px-4">Direct Contact</th>
-                    <th className="py-3.5 px-4">Assigned Projects</th>
-                    <th className="py-3.5 px-4">Last Activity</th>
-                    <th className="py-3.5 px-4">Credentials</th>
+                    <th className="py-3.5 px-4">System Role</th>
+                    <th className="py-3.5 px-4">Credentials & Password</th>
                     <th className="py-3.5 px-4 text-right">Super Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 text-slate-700">
-                  {filteredAdmins.map((adm) => (
-                    <tr key={adm.id} className="hover:bg-slate-50/70 transition-colors h-14">
-                      <td className="py-3.5 px-4">
-                        <div className="flex items-center gap-2.5">
-                          <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-[#17324D] to-[#3478C9] text-white font-bold flex items-center justify-center text-xs shadow-xs">
-                            {adm.name.charAt(0)}
+                  {filteredAdmins.map((adm) => {
+                    const matchedComp = allCompanies.find((c) => c.id === adm.companyId);
+                    return (
+                      <tr key={adm.id} className="hover:bg-slate-50/70 transition-colors h-14">
+                        <td className="py-3.5 px-4">
+                          <div className="flex items-center gap-2.5">
+                            <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-[#17324D] to-[#3478C9] text-white font-bold flex items-center justify-center text-xs shadow-xs">
+                              {adm.name.charAt(0)}
+                            </div>
+                            <div>
+                              <p className="font-bold text-slate-900">{adm.name}</p>
+                              <span className="text-[10px] text-teal-700 bg-teal-50 px-1.5 py-0.2 rounded font-semibold border border-teal-200">
+                                {adm.designation || 'Company Admin'}
+                              </span>
+                            </div>
                           </div>
-                          <div>
-                            <p className="font-bold text-slate-900">{adm.name}</p>
-                            <span className="text-[10px] text-teal-700 bg-teal-50 px-1.5 py-0.2 rounded font-semibold border border-teal-200">
-                              Company Admin
-                            </span>
+                        </td>
+                        <td className="py-3.5 px-4">
+                          <p className="font-bold text-slate-800">{matchedComp?.name || adm.companyId}</p>
+                          <span className="text-[10px] text-slate-400 font-mono">ID: {adm.companyId}</span>
+                        </td>
+                        <td className="py-3.5 px-4">
+                          <p className="font-semibold text-slate-900">{adm.designation}</p>
+                          <span className="text-[10px] text-slate-400">{adm.department}</span>
+                        </td>
+                        <td className="py-3.5 px-4">
+                          <div className="space-y-0.5">
+                            <div className="flex items-center gap-1.5 text-slate-700">
+                              <Mail size={12} className="text-[#3478C9]" />
+                              <span>{adm.email}</span>
+                            </div>
+                            <div className="flex items-center gap-1.5 text-slate-500 font-mono text-[11px]">
+                              <Phone size={12} className="text-teal-600" />
+                              <span>{adm.phone}</span>
+                            </div>
                           </div>
-                        </div>
-                      </td>
-                      <td className="py-3.5 px-4">
-                        <p className="font-bold text-slate-800">{adm.companyName}</p>
-                        <span className="text-[10px] text-slate-400 font-mono">ID: {adm.companyId}</span>
-                      </td>
-                      <td className="py-3.5 px-4">
-                        <p className="font-semibold text-slate-900">{adm.designation}</p>
-                        <span className="text-[10px] text-slate-400">{adm.department}</span>
-                      </td>
-                      <td className="py-3.5 px-4">
-                        <div className="space-y-0.5">
-                          <div className="flex items-center gap-1.5 text-slate-700">
-                            <Mail size={12} className="text-[#3478C9]" />
-                            <span>{adm.email}</span>
-                          </div>
-                          <div className="flex items-center gap-1.5 text-slate-500 font-mono text-[11px]">
-                            <Phone size={12} className="text-teal-600" />
-                            <span>{adm.phone}</span>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="py-3.5 px-4 font-semibold text-slate-800">
-                        {adm.assignedProjectsCount} Active Projects
-                      </td>
-                      <td className="py-3.5 px-4">
-                        <span className="text-slate-700 font-medium">{adm.lastLogin}</span>
-                        <span className="text-[10px] text-slate-400 block font-mono">Member since {adm.joinedDate}</span>
-                      </td>
-                      <td className="py-3.5 px-4">
-                        <button
-                          onClick={() => setSelectedAdminForCredentials(adm)}
-                          className="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded text-[11px] font-mono font-bold flex items-center gap-1 border border-slate-200"
-                        >
-                          <Key size={12} className="text-amber-600" />
-                          <span>View Password</span>
-                        </button>
-                      </td>
-                      <td className="py-3.5 px-4 text-right">
-                        <div className="flex items-center justify-end gap-1.5">
+                        </td>
+                        <td className="py-3.5 px-4">
+                          <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200">
+                            {adm.role.replace('_', ' ')}
+                          </span>
+                        </td>
+                        <td className="py-3.5 px-4">
                           <button
-                            onClick={() => {
-                              setCompanyId(adm.companyId as any);
-                              setRole('COMPANY_ADMIN');
-                              showBanner(`Logged in as Admin "${adm.name}". Opening Company Dashboard...`);
-                              setTimeout(() => router.push('/dashboard'), 600);
-                            }}
-                            className="px-2.5 py-1.5 bg-[#17324D] hover:bg-[#244761] text-white rounded text-[11px] font-bold shadow-xs transition-all flex items-center gap-1"
-                            title="Direct Login as this Admin"
+                            onClick={() => setSelectedAdminForCredentials(adm)}
+                            className="px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-900 rounded text-[11px] font-mono font-bold flex items-center gap-1.5 border border-amber-200"
                           >
-                            <UserCheck size={12} />
-                            <span>Login As</span>
+                            <Key size={12} className="text-amber-600" />
+                            <span>View Password</span>
                           </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
+                        </td>
+                        <td className="py-3.5 px-4 text-right">
+                          <div className="flex items-center justify-end gap-1.5">
+                            <button
+                              onClick={() => {
+                                setCompanyId(adm.companyId);
+                                setRole(adm.role);
+                                showBanner(`Switched persona to "${adm.name}". Opening CRM Dashboard...`);
+                                setTimeout(() => router.push('/dashboard'), 600);
+                              }}
+                              className="px-2.5 py-1.5 bg-[#17324D] hover:bg-[#244761] text-white rounded text-[11px] font-bold shadow-xs transition-all flex items-center gap-1"
+                              title="Direct Login as this Admin"
+                            >
+                              <UserCheck size={12} />
+                              <span>Login As</span>
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
@@ -1119,7 +1186,6 @@ export default function SuperAdminPage() {
         {/* TAB 3: Subscription Manager */}
         {activeTab === 'subscriptions' && (
           <div className="space-y-6">
-            {/* SaaS Tiers Matrix */}
             <div className="bg-white rounded-2xl border border-[#E3E8EF] p-6 shadow-xs space-y-4">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-100">
                 <div>
@@ -1134,78 +1200,81 @@ export default function SuperAdminPage() {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {plans.map((p) => (
-                  <div
-                    key={p.id}
-                    className={`rounded-2xl p-6 border relative flex flex-col justify-between transition-all ${
-                      p.name === 'Enterprise'
-                        ? 'border-purple-300 ring-2 ring-purple-100 bg-gradient-to-b from-white to-purple-50/20'
-                        : p.name === 'Professional'
-                        ? 'border-blue-300 ring-2 ring-blue-100 bg-gradient-to-b from-white to-blue-50/20'
-                        : 'border-slate-200 bg-white'
-                    }`}
-                  >
-                    <div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold uppercase tracking-wider text-slate-500">{p.name} Tier</span>
-                        <span className="text-[10px] font-bold bg-slate-100 text-slate-700 px-2 py-0.5 rounded-full">
-                          {p.activeTenantsCount} Active {p.activeTenantsCount === 1 ? 'Tenant' : 'Tenants'}
-                        </span>
-                      </div>
-
-                      <div className="mt-3 mb-2">
-                        <span className="text-3xl font-black text-[#17324D]">
-                          ₹{p.priceMonthly.toLocaleString('en-IN')}
-                        </span>
-                        <span className="text-xs text-slate-500 font-medium"> / month</span>
-                      </div>
-                      <p className="text-[11px] text-slate-500 mb-4">{p.description}</p>
-
-                      <div className="p-3 bg-slate-50 rounded-xl space-y-1.5 text-xs font-semibold text-slate-700 mb-4 border border-slate-100">
-                        <div className="flex justify-between">
-                          <span className="text-slate-500">User Seats:</span>
-                          <span className="font-bold">{p.userLimit} Accounts</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-slate-500">Active Projects:</span>
-                          <span className="font-bold">{p.projectLimit} Portfolios</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-slate-500">Cloud Storage:</span>
-                          <span className="font-bold">{p.storageGB} GB Vault</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-slate-500">WhatsApp Messages:</span>
-                          <span className="font-bold">{p.whatsappQuota.toLocaleString('en-IN')}/mo</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-slate-500">AI Sales Co-Pilot:</span>
-                          <span className={p.aiAssistant ? 'text-teal-600 font-bold' : 'text-slate-400'}>
-                            {p.aiAssistant ? 'Included' : 'Not Included'}
+                {plans.map((p) => {
+                  const tenantsOnPlan = allCompanies.filter((c) => c.plan === p.name).length;
+                  return (
+                    <div
+                      key={p.id}
+                      className={`rounded-2xl p-6 border relative flex flex-col justify-between transition-all ${
+                        p.name === 'Enterprise'
+                          ? 'border-purple-300 ring-2 ring-purple-100 bg-gradient-to-b from-white to-purple-50/20'
+                          : p.name === 'Professional'
+                          ? 'border-blue-300 ring-2 ring-blue-100 bg-gradient-to-b from-white to-blue-50/20'
+                          : 'border-slate-200 bg-white'
+                      }`}
+                    >
+                      <div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-bold uppercase tracking-wider text-slate-500">{p.name} Tier</span>
+                          <span className="text-[10px] font-bold bg-slate-100 text-slate-700 px-2 py-0.5 rounded-full">
+                            {tenantsOnPlan} Active {tenantsOnPlan === 1 ? 'Tenant' : 'Tenants'}
                           </span>
                         </div>
+
+                        <div className="mt-3 mb-2">
+                          <span className="text-3xl font-black text-[#17324D]">
+                            ₹{p.priceMonthly.toLocaleString('en-IN')}
+                          </span>
+                          <span className="text-xs text-slate-500 font-medium"> / month</span>
+                        </div>
+                        <p className="text-[11px] text-slate-500 mb-4">{p.description}</p>
+
+                        <div className="p-3 bg-slate-50 rounded-xl space-y-1.5 text-xs font-semibold text-slate-700 mb-4 border border-slate-100">
+                          <div className="flex justify-between">
+                            <span className="text-slate-500">User Seats:</span>
+                            <span className="font-bold">{p.userLimit} Accounts</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-slate-500">Active Projects:</span>
+                            <span className="font-bold">{p.projectLimit} Portfolios</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-slate-500">Cloud Storage:</span>
+                            <span className="font-bold">{p.storageGB} GB Vault</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-slate-500">WhatsApp Messages:</span>
+                            <span className="font-bold">{p.whatsappQuota.toLocaleString('en-IN')}/mo</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-slate-500">AI Sales Co-Pilot:</span>
+                            <span className={p.aiAssistant ? 'text-teal-600 font-bold' : 'text-slate-400'}>
+                              {p.aiAssistant ? 'Included' : 'Not Included'}
+                            </span>
+                          </div>
+                        </div>
+
+                        <ul className="space-y-2 text-xs text-slate-600">
+                          {p.features.map((f, fIdx) => (
+                            <li key={fIdx} className="flex items-center gap-2">
+                              <Check size={14} className="text-teal-600 shrink-0" />
+                              <span>{f}</span>
+                            </li>
+                          ))}
+                        </ul>
                       </div>
 
-                      <ul className="space-y-2 text-xs text-slate-600">
-                        {p.features.map((f, fIdx) => (
-                          <li key={fIdx} className="flex items-center gap-2">
-                            <Check size={14} className="text-teal-600 shrink-0" />
-                            <span>{f}</span>
-                          </li>
-                        ))}
-                      </ul>
+                      <div className="mt-6 pt-4 border-t border-slate-100">
+                        <button
+                          onClick={() => showBanner(`Plan "${p.name}" configuration saved.`)}
+                          className="w-full py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-lg text-xs font-bold transition-all"
+                        >
+                          Edit Plan Quotas
+                        </button>
+                      </div>
                     </div>
-
-                    <div className="mt-6 pt-4 border-t border-slate-100">
-                      <button
-                        onClick={() => showBanner(`Plan "${p.name}" configuration saved.`)}
-                        className="w-full py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-lg text-xs font-bold transition-all"
-                      >
-                        Edit Plan Quotas
-                      </button>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           </div>
@@ -1218,7 +1287,7 @@ export default function SuperAdminPage() {
               <div>
                 <h2 className="text-base font-bold text-[#17324D]">Monthly SaaS Billing & Dues Collection</h2>
                 <p className="text-xs text-slate-500">
-                  Track subscription realization, pending developer dues, overdue payments, and issue legal GST tax invoices.
+                  Track subscription realization, pending developer dues, overdue payments, and issue legal GST tax invoices with CIN.
                 </p>
               </div>
 
@@ -1375,12 +1444,12 @@ export default function SuperAdminPage() {
 
             <div className="space-y-2.5 text-xs font-mono">
               {[
-                { time: '2026-11-04 02:22:15', tenant: 'PRESTIGE', user: 'Vikramaditya Rao', action: 'Approved Booking BK-089 for Unit A-102 (₹1.45 Cr)', ip: '103.21.144.18', level: 'INFO' },
+                { time: '2026-11-04 02:45:10', tenant: 'PRESTIGE', user: 'Vikramaditya Rao', action: 'Approved Booking BK-PRESTIGE-2026-881 for Unit A-102 (₹1.45 Cr)', ip: '103.21.144.18', level: 'INFO' },
                 { time: '2026-11-04 01:45:00', tenant: 'GODREJ', user: 'Priya Nair', action: 'Updated Tower B Stacking plan (12 units marked Available)', ip: '49.36.128.92', level: 'INFO' },
                 { time: '2026-11-03 22:10:44', tenant: 'SOBHA', user: 'System (Billing)', action: 'Invoice INV-2026-10-004 marked Overdue. Reminder dispatched.', ip: '127.0.0.1 (Cron)', level: 'WARN' },
                 { time: '2026-11-03 18:30:11', tenant: 'PRESTIGE', user: 'Rohan Sharma', action: 'Placed 72-hr Transactional Lock on Unit B-504 for customer Naveen Jindal', ip: '103.21.144.12', level: 'INFO' },
                 { time: '2026-11-03 15:12:00', tenant: 'URBAN', user: 'Rajesh Khurana', action: 'Meta Lead Ads Webhook Synced 5 inquiries for Sector 62 project', ip: '31.13.127.1', level: 'INFO' },
-                { time: '2026-11-03 11:05:32', tenant: 'ROOT', user: 'Super Admin (Rajesh Malhotra)', action: 'Upgraded tenant PRESTIGE to Enterprise Plan with 50 User Seats', ip: '14.143.18.22', level: 'AUTH' },
+                { time: '2026-11-03 11:05:32', tenant: 'ROOT', user: 'Super Admin (Rajesh Malhotra)', action: 'Provisioned developer tenant with dynamic CIN and auto-generated secure credentials', ip: '14.143.18.22', level: 'AUTH' },
               ].map((log, idx) => (
                 <div
                   key={idx}
@@ -1468,10 +1537,10 @@ export default function SuperAdminPage() {
         )}
       </main>
 
-      {/* MODAL 1: Provision New Builder Tenant */}
+      {/* MODAL 1: Provision New Builder Tenant (with Password Gen & CIN/RERA/GSTIN) */}
       {provisionModalOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in">
-          <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 relative animate-in zoom-in-95">
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in overflow-y-auto">
+          <div className="bg-white rounded-2xl max-w-2xl w-full p-6 shadow-2xl border border-slate-200 relative animate-in zoom-in-95 my-8">
             <button
               onClick={() => setProvisionModalOpen(false)}
               className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 p-1"
@@ -1481,105 +1550,251 @@ export default function SuperAdminPage() {
 
             <div className="flex items-center gap-2 text-teal-600 text-xs font-bold uppercase mb-1">
               <Building2 size={16} />
-              <span>Multi-Tenant Provisioning</span>
+              <span>Multi-Tenant Builder Onboarding</span>
             </div>
             <h3 className="text-lg font-black text-[#17324D]">Onboard New Real Estate Developer</h3>
             <p className="text-xs text-slate-500 mt-0.5 mb-4">
-              Instantly provisions dedicated isolated tenant database schemas, company workspace, and generates root administrator credentials.
+              Configures isolated tenant database workspace, legal registration numbers (CIN/RERA/GSTIN), and auto-generates root admin credentials.
             </p>
 
-            <form onSubmit={handleProvisionSubmit} className="space-y-3 text-xs">
-              <div className="grid grid-cols-3 gap-3">
-                <div className="col-span-2">
-                  <label className="block font-semibold text-slate-700 mb-1">Company / Developer Name</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g. Brigade Group"
-                    value={provisionForm.companyName}
-                    onChange={(e) => setProvisionForm({ ...provisionForm, companyName: e.target.value })}
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-900"
-                  />
+            <form onSubmit={handleProvisionSubmit} className="space-y-4 text-xs">
+              {/* SECTION 1: Company Profile */}
+              <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-slate-800 text-[11px] uppercase tracking-wider block">
+                    1. Developer Identity & Location
+                  </span>
+                  <button
+                    type="button"
+                    onClick={handleAutoFillRegDetails}
+                    className="text-[11px] text-[#3478C9] hover:underline font-bold flex items-center gap-1"
+                  >
+                    <Sparkles size={12} />
+                    <span>Auto-fill Sample CIN & RERA</span>
+                  </button>
                 </div>
-                <div>
-                  <label className="block font-semibold text-slate-700 mb-1">Tenant Code</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="BRIGADE"
-                    value={provisionForm.code}
-                    onChange={(e) => setProvisionForm({ ...provisionForm, code: e.target.value })}
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-900 uppercase font-mono"
-                  />
-                </div>
-              </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block font-semibold text-slate-700 mb-1">Headquarters City</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="Bangalore"
-                    value={provisionForm.city}
-                    onChange={(e) => setProvisionForm({ ...provisionForm, city: e.target.value })}
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-900"
-                  />
-                </div>
-                <div>
-                  <label className="block font-semibold text-slate-700 mb-1">Company Contact Phone</label>
-                  <input
-                    type="tel"
-                    required
-                    placeholder="+91 80 4000 1122"
-                    value={provisionForm.phone}
-                    onChange={(e) => setProvisionForm({ ...provisionForm, phone: e.target.value })}
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-900"
-                  />
-                </div>
-              </div>
-
-              <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
-                <span className="font-bold text-slate-800 text-[11px] uppercase tracking-wider block">
-                  Primary Company Admin Account
-                </span>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div className="sm:col-span-2">
+                    <label className="block font-semibold text-slate-700 mb-1">Developer Company Name *</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. Brigade Enterprises Ltd"
+                      value={provisionForm.companyName}
+                      onChange={(e) => setProvisionForm({ ...provisionForm, companyName: e.target.value })}
+                      className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-slate-900 font-medium"
+                    />
+                  </div>
                   <div>
-                    <label className="block text-[11px] font-semibold text-slate-600 mb-0.5">Admin Full Name</label>
+                    <label className="block font-semibold text-slate-700 mb-1">Tenant Code *</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="BRIGADE"
+                      value={provisionForm.code}
+                      onChange={(e) => {
+                        const val = e.target.value.toUpperCase();
+                        setProvisionForm({
+                          ...provisionForm,
+                          code: val,
+                          adminPassword: generateSecurePassword(val || 'Builder'),
+                        });
+                      }}
+                      className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-slate-900 uppercase font-mono font-bold"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block font-semibold text-slate-700 mb-1">Headquarters City *</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="Bangalore"
+                      value={provisionForm.city}
+                      onChange={(e) => setProvisionForm({ ...provisionForm, city: e.target.value })}
+                      className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-slate-900"
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-semibold text-slate-700 mb-1">Official Company Phone *</label>
+                    <input
+                      type="tel"
+                      required
+                      placeholder="+91 80 4000 1122"
+                      value={provisionForm.phone}
+                      onChange={(e) => setProvisionForm({ ...provisionForm, phone: e.target.value })}
+                      className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-slate-900"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* SECTION 2: Legal Registration (CIN / ROC, RERA, GSTIN) */}
+              <div className="p-3.5 bg-blue-50/40 rounded-xl border border-blue-200 space-y-3">
+                <div className="flex items-center gap-1.5 text-blue-900 font-bold text-[11px] uppercase tracking-wider">
+                  <ShieldCheck size={14} className="text-[#3478C9]" />
+                  <span>2. Legal Entity Registration Details (India RERA / ROC)</span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block font-semibold text-slate-700 mb-1">
+                      Company Registration / CIN Number *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. U45200KA2024PTC189201"
+                      value={provisionForm.registrationNumber}
+                      onChange={(e) => setProvisionForm({ ...provisionForm, registrationNumber: e.target.value, cin: e.target.value })}
+                      className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-slate-900 font-mono uppercase text-xs"
+                    />
+                    <span className="text-[10px] text-slate-400 mt-0.5 block">21-digit Corporate Identification Number (CIN)</span>
+                  </div>
+
+                  <div>
+                    <label className="block font-semibold text-slate-700 mb-1">
+                      State RERA Registration ID *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. PRM/KA/RERA/1251/310/PR/240115/007890"
+                      value={provisionForm.reraNumber}
+                      onChange={(e) => setProvisionForm({ ...provisionForm, reraNumber: e.target.value })}
+                      className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-slate-900 font-mono text-xs"
+                    />
+                    <span className="text-[10px] text-slate-400 mt-0.5 block">State Real Estate Regulatory Authority License</span>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block font-semibold text-slate-700 mb-1">GSTIN (for 18% Tax Invoices)</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. 29AABCB9876E1Z4"
+                      value={provisionForm.gstin}
+                      onChange={(e) => setProvisionForm({ ...provisionForm, gstin: e.target.value.toUpperCase() })}
+                      className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-slate-900 font-mono uppercase text-xs"
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-semibold text-slate-700 mb-1">Registered Corporate Address</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Brigade Gateway, Malleswaram, Bangalore"
+                      value={provisionForm.address}
+                      onChange={(e) => setProvisionForm({ ...provisionForm, address: e.target.value })}
+                      className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-slate-900 text-xs"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* SECTION 3: Primary Admin & Password Generator */}
+              <div className="p-3.5 bg-amber-50/40 rounded-xl border border-amber-200 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1.5 text-amber-900 font-bold text-[11px] uppercase tracking-wider">
+                    <Key size={14} className="text-amber-600" />
+                    <span>3. Primary Builder Admin & Auto-Generated Password</span>
+                  </div>
+                  <span className="text-[10px] font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded">
+                    High Security Entropy
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block font-semibold text-slate-700 mb-1">Admin Full Name *</label>
                     <input
                       type="text"
                       required
                       placeholder="M. R. Jaishankar"
                       value={provisionForm.adminName}
                       onChange={(e) => setProvisionForm({ ...provisionForm, adminName: e.target.value })}
-                      className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-slate-900"
+                      className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-slate-900"
                     />
                   </div>
                   <div>
-                    <label className="block text-[11px] font-semibold text-slate-600 mb-0.5">Admin Login Email</label>
+                    <label className="block font-semibold text-slate-700 mb-1">Admin Login Email *</label>
                     <input
                       type="email"
                       required
                       placeholder="admin@brigadegroup.com"
                       value={provisionForm.adminEmail}
                       onChange={(e) => setProvisionForm({ ...provisionForm, adminEmail: e.target.value })}
-                      className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-slate-900"
+                      className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-slate-900 font-mono"
                     />
                   </div>
                 </div>
+
+                {/* Password Generator Input Box */}
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1">
+                    Auto-Generated Admin Temporary Password *
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <div className="relative flex-1">
+                      <input
+                        type={provisionForm.showPassword ? 'text' : 'password'}
+                        required
+                        value={provisionForm.adminPassword}
+                        onChange={(e) => setProvisionForm({ ...provisionForm, adminPassword: e.target.value })}
+                        className="w-full px-3 py-2 pr-10 bg-white border border-slate-300 rounded-lg text-slate-900 font-mono font-bold text-sm tracking-wide"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setProvisionForm({ ...provisionForm, showPassword: !provisionForm.showPassword })}
+                        className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 p-1"
+                      >
+                        {provisionForm.showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
+                      </button>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const newPass = generateSecurePassword(provisionForm.code || 'Builder');
+                        setProvisionForm({ ...provisionForm, adminPassword: newPass });
+                        showBanner('New secure password generated!');
+                      }}
+                      className="h-9 px-3 bg-amber-100 hover:bg-amber-200 text-amber-900 font-bold rounded-lg flex items-center gap-1.5 transition-colors shrink-0"
+                      title="Re-generate high entropy password"
+                    >
+                      <RefreshCw size={13} />
+                      <span>Re-Generate</span>
+                    </button>
+                  </div>
+                  <span className="text-[10px] text-slate-500 mt-1 block">
+                    This password will be securely provisioned into the database. You will get a 1-click copy card after saving.
+                  </span>
+                </div>
               </div>
 
-              <div className="grid grid-cols-3 gap-3">
+              {/* SECTION 4: Subscription Plan & Limits */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div>
                   <label className="block font-semibold text-slate-700 mb-1">Subscription Plan</label>
                   <select
                     value={provisionForm.plan}
-                    onChange={(e) => setProvisionForm({ ...provisionForm, plan: e.target.value as any })}
-                    className="w-full px-2.5 py-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-900"
+                    onChange={(e) => {
+                      const p = e.target.value as any;
+                      setProvisionForm({
+                        ...provisionForm,
+                        plan: p,
+                        userLimit: p === 'Starter' ? 5 : p === 'Enterprise' ? 50 : 20,
+                        projectLimit: p === 'Starter' ? 2 : p === 'Enterprise' ? 25 : 10,
+                      });
+                    }}
+                    className="w-full px-2.5 py-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-900 font-semibold"
                   >
-                    <option value="Starter">Starter (₹14,999)</option>
-                    <option value="Professional">Professional (₹34,999)</option>
-                    <option value="Enterprise">Enterprise (₹89,999)</option>
+                    <option value="Starter">Starter Tier (₹14,999/mo)</option>
+                    <option value="Professional">Professional Tier (₹34,999/mo)</option>
+                    <option value="Enterprise">Enterprise Tier (₹89,999/mo)</option>
                   </select>
                 </div>
                 <div>
@@ -1602,7 +1817,8 @@ export default function SuperAdminPage() {
                 </div>
               </div>
 
-              <div className="pt-3 flex items-center justify-end gap-2">
+              {/* Actions */}
+              <div className="pt-3 flex items-center justify-end gap-2 border-t border-slate-100">
                 <button
                   type="button"
                   onClick={() => setProvisionModalOpen(false)}
@@ -1615,7 +1831,7 @@ export default function SuperAdminPage() {
                   className="px-5 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-lg font-bold shadow-md flex items-center gap-1.5"
                 >
                   <Check size={14} />
-                  <span>Provision Tenant Workspace</span>
+                  <span>Provision Tenant & Save Credentials</span>
                 </button>
               </div>
             </form>
@@ -1623,7 +1839,484 @@ export default function SuperAdminPage() {
         </div>
       )}
 
-      {/* MODAL 2: View Admin Verified Credentials */}
+      {/* MODAL 2: Newly Provisioned Credentials & Workspace Handoff Card */}
+      {credentialHandoff && (
+        <div className="fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in">
+          <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 relative animate-in zoom-in-95">
+            <button
+              onClick={() => setCredentialHandoff(null)}
+              className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 p-1"
+            >
+              <X size={18} />
+            </button>
+
+            <div className="w-12 h-12 rounded-2xl bg-teal-100 text-teal-700 flex items-center justify-center mb-3">
+              <CheckCircle2 size={26} />
+            </div>
+
+            <span className="text-[11px] font-bold uppercase tracking-wider text-teal-600">
+              Workspace Provisioned Successfully
+            </span>
+            <h3 className="text-xl font-black text-[#17324D]">{credentialHandoff.company.name}</h3>
+            <p className="text-xs text-slate-500 mt-0.5 mb-4">
+              Tenant account is active. Share these credentials with the builder administration team.
+            </p>
+
+            <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-3 text-xs">
+              <div className="flex justify-between items-center pb-2 border-b border-slate-200">
+                <span className="text-slate-500 font-semibold">Tenant Identifier:</span>
+                <span className="font-mono font-bold text-slate-900 bg-white px-2 py-0.5 rounded border border-slate-200">
+                  {credentialHandoff.company.code} (ID: {credentialHandoff.company.id})
+                </span>
+              </div>
+
+              <div className="flex justify-between items-center pb-2 border-b border-slate-200">
+                <span className="text-slate-500 font-semibold">CIN Registration Number:</span>
+                <span className="font-mono font-bold text-slate-800">
+                  {credentialHandoff.company.registrationNumber || credentialHandoff.company.cin}
+                </span>
+              </div>
+
+              <div className="flex justify-between items-center pb-2 border-b border-slate-200">
+                <span className="text-slate-500 font-semibold">State RERA ID:</span>
+                <span className="font-mono font-bold text-teal-700">
+                  {credentialHandoff.company.reraNumber}
+                </span>
+              </div>
+
+              <div>
+                <span className="text-slate-500 font-semibold block mb-1">Admin Login Email:</span>
+                <div className="flex items-center justify-between bg-white px-3 py-1.5 rounded-lg border border-slate-200 font-mono">
+                  <span className="font-bold text-slate-900">{credentialHandoff.admin.email}</span>
+                  <button
+                    onClick={() => copyToClipboard(credentialHandoff.admin.email, 'Admin Email')}
+                    className="text-slate-400 hover:text-slate-700"
+                    title="Copy Email"
+                  >
+                    <Copy size={13} />
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <span className="text-slate-500 font-semibold block mb-1">Generated Password:</span>
+                <div className="flex items-center justify-between bg-amber-50 px-3 py-2 rounded-lg border border-amber-200 font-mono">
+                  <span className="font-black text-amber-900 text-sm tracking-wide">{credentialHandoff.rawPassword}</span>
+                  <button
+                    onClick={() => copyToClipboard(credentialHandoff.rawPassword, 'Password')}
+                    className="px-2.5 py-1 bg-amber-200/70 hover:bg-amber-200 text-amber-900 font-bold rounded text-[11px] flex items-center gap-1 transition-colors"
+                  >
+                    <Copy size={12} />
+                    <span>Copy Password</span>
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <span className="text-slate-500 font-semibold block mb-1">Stakeholder Login Portal URL:</span>
+                <div className="flex items-center justify-between bg-white px-3 py-1.5 rounded-lg border border-slate-200 font-mono text-[11px]">
+                  <span className="text-slate-600 truncate mr-2">{credentialHandoff.loginUrl}</span>
+                  <button
+                    onClick={() => copyToClipboard(credentialHandoff.loginUrl, 'Login URL')}
+                    className="text-slate-400 hover:text-slate-700 shrink-0"
+                    title="Copy URL"
+                  >
+                    <Copy size={13} />
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-5 flex flex-wrap items-center justify-end gap-2">
+              <button
+                onClick={() => {
+                  const payload = `ESTATEFLOW BUILDER CREDENTIALS\nCompany: ${credentialHandoff.company.name}\nCIN: ${credentialHandoff.company.registrationNumber}\nRERA: ${credentialHandoff.company.reraNumber}\nAdmin: ${credentialHandoff.admin.name}\nEmail: ${credentialHandoff.admin.email}\nPassword: ${credentialHandoff.rawPassword}\nLogin URL: ${credentialHandoff.loginUrl}`;
+                  copyToClipboard(payload, 'Full Credential Dossier');
+                }}
+                className="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-lg text-xs font-bold flex items-center gap-1.5"
+              >
+                <Copy size={13} />
+                <span>Copy Full Credentials</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  setCredentialHandoff(null);
+                  handleImpersonateTenant(credentialHandoff.company);
+                }}
+                className="px-4 py-2 bg-[#3478C9] hover:bg-blue-600 text-white rounded-lg text-xs font-bold flex items-center gap-1.5 shadow-md"
+              >
+                <ExternalLink size={13} />
+                <span>Impersonate & Open CRM</span>
+              </button>
+
+              <button
+                onClick={() => setCredentialHandoff(null)}
+                className="px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-lg text-xs font-bold"
+              >
+                Done
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL 3: Add Tenant Admin */}
+      {adminModalOpen && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in">
+          <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 relative animate-in zoom-in-95">
+            <button
+              onClick={() => setAdminModalOpen(false)}
+              className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 p-1"
+            >
+              <X size={18} />
+            </button>
+
+            <div className="flex items-center gap-2 text-indigo-600 text-xs font-bold uppercase mb-1">
+              <UserCheck size={16} />
+              <span>Create Tenant Administrator</span>
+            </div>
+            <h3 className="text-lg font-black text-[#17324D]">Add Admin to Developer Workspace</h3>
+            <p className="text-xs text-slate-500 mt-0.5 mb-4">
+              Assign an executive login profile to any registered builder tenant with password generation.
+            </p>
+
+            <form onSubmit={handleAddAdminSubmit} className="space-y-3 text-xs">
+              <div>
+                <label className="block font-semibold text-slate-700 mb-1">Assign to Developer Company *</label>
+                <select
+                  value={newAdminForm.companyId}
+                  onChange={(e) => setNewAdminForm({ ...newAdminForm, companyId: e.target.value })}
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-900 font-bold"
+                >
+                  {allCompanies.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name} ({c.code}) - {c.city}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1">Admin Full Name *</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Priya Nair"
+                    value={newAdminForm.name}
+                    onChange={(e) => setNewAdminForm({ ...newAdminForm, name: e.target.value })}
+                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-slate-900 font-medium"
+                  />
+                </div>
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1">Login Email *</label>
+                  <input
+                    type="email"
+                    required
+                    placeholder="priya.nair@company.com"
+                    value={newAdminForm.email}
+                    onChange={(e) => setNewAdminForm({ ...newAdminForm, email: e.target.value })}
+                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-slate-900 font-mono"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1">Phone Number *</label>
+                  <input
+                    type="tel"
+                    required
+                    placeholder="+91 98200 45678"
+                    value={newAdminForm.phone}
+                    onChange={(e) => setNewAdminForm({ ...newAdminForm, phone: e.target.value })}
+                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-slate-900"
+                  />
+                </div>
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1">Designation</label>
+                  <input
+                    type="text"
+                    placeholder="Head of Operations & Co-Founder"
+                    value={newAdminForm.designation}
+                    onChange={(e) => setNewAdminForm({ ...newAdminForm, designation: e.target.value })}
+                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-slate-900"
+                  />
+                </div>
+              </div>
+
+              {/* Password Generator */}
+              <div>
+                <label className="block font-semibold text-slate-700 mb-1">Generated Password *</label>
+                <div className="flex items-center gap-2">
+                  <div className="relative flex-1">
+                    <input
+                      type={newAdminForm.showPassword ? 'text' : 'password'}
+                      required
+                      value={newAdminForm.password}
+                      onChange={(e) => setNewAdminForm({ ...newAdminForm, password: e.target.value })}
+                      className="w-full px-3 py-2 pr-10 bg-white border border-slate-300 rounded-lg text-slate-900 font-mono font-bold text-sm"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setNewAdminForm({ ...newAdminForm, showPassword: !newAdminForm.showPassword })}
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 p-1"
+                    >
+                      {newAdminForm.showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
+                    </button>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setNewAdminForm({ ...newAdminForm, password: generateSecurePassword('Admin') });
+                    }}
+                    className="h-9 px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-bold flex items-center gap-1 shrink-0"
+                  >
+                    <RefreshCw size={13} />
+                    <span>Regen</span>
+                  </button>
+                </div>
+              </div>
+
+              <div className="pt-3 flex items-center justify-end gap-2 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setAdminModalOpen(false)}
+                  className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-bold"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 bg-[#17324D] hover:bg-[#244761] text-white rounded-lg font-bold shadow-md flex items-center gap-1.5"
+                >
+                  <Check size={14} />
+                  <span>Create Admin User</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL 4: Modify Subscription Tier */}
+      {subscriptionModalOpen && selectedCompanyForSub && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 relative animate-in zoom-in-95">
+            <button
+              onClick={() => setSubscriptionModalOpen(false)}
+              className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 p-1"
+            >
+              <X size={18} />
+            </button>
+
+            <div className="flex items-center gap-2 text-purple-600 text-xs font-bold uppercase mb-1">
+              <CreditCard size={16} />
+              <span>Modify Subscription Tier</span>
+            </div>
+            <h3 className="text-lg font-black text-[#17324D]">{selectedCompanyForSub.name}</h3>
+            <p className="text-xs text-slate-500 mt-0.5 mb-4">
+              Upgrade or downgrade active subscription tier, change user seat limits, and recalculate monthly MRR fee.
+            </p>
+
+            <form onSubmit={handleSubscriptionSubmit} className="space-y-4 text-xs">
+              <div>
+                <label className="block font-semibold text-slate-700 mb-1">Select SaaS Plan</label>
+                <select
+                  value={selectedCompanyForSub.plan}
+                  onChange={(e) => {
+                    const plan = e.target.value as any;
+                    setSelectedCompanyForSub({
+                      ...selectedCompanyForSub,
+                      plan,
+                      userLimit: plan === 'Starter' ? 5 : plan === 'Enterprise' ? 50 : 20,
+                      projectLimit: plan === 'Starter' ? 2 : plan === 'Enterprise' ? 25 : 10,
+                      monthlyFee: plan === 'Starter' ? 14999 : plan === 'Enterprise' ? 89999 : 34999,
+                    });
+                  }}
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-900 font-bold"
+                >
+                  <option value="Starter">Starter (₹14,999/mo • 5 Seats)</option>
+                  <option value="Professional">Professional (₹34,999/mo • 20 Seats)</option>
+                  <option value="Enterprise">Enterprise (₹89,999/mo • 50+ Seats)</option>
+                </select>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1">User Limit Quota</label>
+                  <input
+                    type="number"
+                    value={selectedCompanyForSub.userLimit}
+                    onChange={(e) => setSelectedCompanyForSub({ ...selectedCompanyForSub, userLimit: parseInt(e.target.value) || 20 })}
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-900 font-mono"
+                  />
+                </div>
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1">Project Limit</label>
+                  <input
+                    type="number"
+                    value={selectedCompanyForSub.projectLimit}
+                    onChange={(e) => setSelectedCompanyForSub({ ...selectedCompanyForSub, projectLimit: parseInt(e.target.value) || 10 })}
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-900 font-mono"
+                  />
+                </div>
+              </div>
+
+              <div className="p-3 bg-purple-50 rounded-xl border border-purple-200 flex items-center justify-between">
+                <span className="text-purple-900 font-semibold">New Monthly Billing Rate:</span>
+                <span className="font-mono font-black text-purple-900 text-sm">
+                  ₹{(selectedCompanyForSub.monthlyFee || 34999).toLocaleString('en-IN')}/mo
+                </span>
+              </div>
+
+              <div className="pt-2 flex items-center justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setSubscriptionModalOpen(false)}
+                  className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-bold"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-bold shadow-md"
+                >
+                  Apply Subscription Change
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL 5: Company Legal Dossier Slide-Over / Modal */}
+      {companyDetailsModalOpen && selectedCompanyDetails && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in">
+          <div className="bg-white rounded-2xl max-w-xl w-full p-6 shadow-2xl border border-slate-200 relative animate-in zoom-in-95 max-h-[90vh] overflow-y-auto">
+            <button
+              onClick={() => setCompanyDetailsModalOpen(false)}
+              className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 p-1"
+            >
+              <X size={18} />
+            </button>
+
+            <div className="flex items-center gap-2 text-teal-600 text-xs font-bold uppercase mb-1">
+              <Building2 size={16} />
+              <span>Developer Legal Registry Dossier</span>
+            </div>
+            <h3 className="text-xl font-black text-[#17324D]">{selectedCompanyDetails.name}</h3>
+            <span className="inline-block px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-700 font-mono mt-1">
+              TENANT CODE: {selectedCompanyDetails.code} • ID: {selectedCompanyDetails.id}
+            </span>
+
+            <div className="mt-4 space-y-4 text-xs">
+              {/* Legal Registrations Block */}
+              <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-2.5">
+                <span className="font-bold text-slate-800 text-[11px] uppercase tracking-wider block border-b border-slate-200 pb-1">
+                  Statutory & Compliance Registrations
+                </span>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <span className="text-[10px] text-slate-400 font-semibold block">Company CIN (ROC):</span>
+                    <span className="font-mono font-bold text-slate-900 text-xs">
+                      {selectedCompanyDetails.registrationNumber || selectedCompanyDetails.cin || 'NOT RECORDED'}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-slate-400 font-semibold block">State RERA ID:</span>
+                    <span className="font-mono font-bold text-teal-700 text-xs">
+                      {selectedCompanyDetails.reraNumber || 'NOT RECORDED'}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3 pt-1">
+                  <div>
+                    <span className="text-[10px] text-slate-400 font-semibold block">GSTIN:</span>
+                    <span className="font-mono font-bold text-slate-800 text-xs">
+                      {selectedCompanyDetails.gstin || 'NOT RECORDED'}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-slate-400 font-semibold block">Headquarters:</span>
+                    <span className="font-semibold text-slate-800">
+                      {selectedCompanyDetails.city}, {selectedCompanyDetails.state || 'India'}
+                    </span>
+                  </div>
+                </div>
+
+                {selectedCompanyDetails.address && (
+                  <div className="pt-1">
+                    <span className="text-[10px] text-slate-400 font-semibold block">Registered Office:</span>
+                    <span className="text-slate-700">{selectedCompanyDetails.address}</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Subscription & Quota Block */}
+              <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
+                <span className="font-bold text-slate-800 text-[11px] uppercase tracking-wider block border-b border-slate-200 pb-1">
+                  SaaS Subscription & Account Quotas
+                </span>
+
+                <div className="grid grid-cols-3 gap-2 text-center pt-1">
+                  <div className="bg-white p-2 rounded-lg border border-slate-200">
+                    <span className="text-[10px] text-slate-400 block">Current Tier</span>
+                    <span className="font-bold text-purple-700 text-xs">{selectedCompanyDetails.plan}</span>
+                  </div>
+                  <div className="bg-white p-2 rounded-lg border border-slate-200">
+                    <span className="text-[10px] text-slate-400 block">User Quota</span>
+                    <span className="font-bold text-slate-900 text-xs">{selectedCompanyDetails.userLimit} Seats</span>
+                  </div>
+                  <div className="bg-white p-2 rounded-lg border border-slate-200">
+                    <span className="text-[10px] text-slate-400 block">Monthly Rate</span>
+                    <span className="font-bold text-emerald-700 text-xs">
+                      ₹{(selectedCompanyDetails.monthlyFee || 34999).toLocaleString('en-IN')}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Primary Contact */}
+              <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-1.5">
+                <span className="font-bold text-slate-800 text-[11px] uppercase tracking-wider block border-b border-slate-200 pb-1">
+                  Primary Administrator
+                </span>
+                <p className="font-bold text-slate-900">{selectedCompanyDetails.adminName || 'Admin User'}</p>
+                <div className="flex items-center gap-3 text-slate-600 font-mono text-[11px]">
+                  <span>{selectedCompanyDetails.contactEmail || selectedCompanyDetails.adminEmail}</span>
+                  <span>•</span>
+                  <span>{selectedCompanyDetails.phone}</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-5 flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
+              <button
+                onClick={() => {
+                  setCompanyDetailsModalOpen(false);
+                  handleImpersonateTenant(selectedCompanyDetails);
+                }}
+                className="px-4 py-2 bg-[#3478C9] hover:bg-blue-600 text-white rounded-lg text-xs font-bold flex items-center gap-1.5"
+              >
+                <ExternalLink size={13} />
+                <span>Impersonate Tenant</span>
+              </button>
+              <button
+                onClick={() => setCompanyDetailsModalOpen(false)}
+                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-bold"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL 6: View Admin Credentials */}
       {selectedAdminForCredentials && (
         <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in">
           <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 relative animate-in zoom-in-95">
@@ -1640,7 +2333,7 @@ export default function SuperAdminPage() {
             </div>
             <h3 className="text-lg font-black text-[#17324D]">{selectedAdminForCredentials.name}</h3>
             <p className="text-xs text-slate-500 mt-0.5 mb-4">
-              Verified platform credentials for {selectedAdminForCredentials.companyName}.
+              Verified platform credentials for tenant workspace.
             </p>
 
             <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-3 text-xs">
@@ -1652,7 +2345,7 @@ export default function SuperAdminPage() {
                 <span className="text-[11px] font-semibold text-slate-500 block">Active Password:</span>
                 <div className="flex items-center gap-2 mt-0.5">
                   <span className="font-mono font-bold text-amber-800 bg-amber-100 px-2 py-1 rounded text-sm">
-                    {selectedAdminForCredentials.tempPass}
+                    {selectedAdminForCredentials.password || 'admin123'}
                   </span>
                   <span className="text-[11px] text-slate-400 font-semibold">(Verified Production Credential)</span>
                 </div>
@@ -1666,10 +2359,10 @@ export default function SuperAdminPage() {
             <div className="mt-5 flex items-center justify-end gap-2">
               <button
                 onClick={() => {
-                  navigator.clipboard.writeText(
-                    `Email: ${selectedAdminForCredentials.email}\nPassword: ${selectedAdminForCredentials.tempPass}`
+                  copyToClipboard(
+                    `Email: ${selectedAdminForCredentials.email}\nPassword: ${selectedAdminForCredentials.password || 'admin123'}`,
+                    'Admin Credentials'
                   );
-                  showBanner('Admin credentials copied to clipboard!');
                   setSelectedAdminForCredentials(null);
                 }}
                 className="px-4 py-2 bg-[#17324D] hover:bg-[#244761] text-white rounded-lg text-xs font-bold shadow-xs"
@@ -1687,7 +2380,7 @@ export default function SuperAdminPage() {
         </div>
       )}
 
-      {/* MODAL 3: Printable Official GST SaaS Tax Invoice */}
+      {/* MODAL 7: Printable Official GST SaaS Tax Invoice */}
       {invoiceModalOpen && selectedInvoice && (
         <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in">
           <div className="bg-white rounded-2xl max-w-2xl w-full p-8 shadow-2xl border border-slate-200 relative animate-in zoom-in-95 max-h-[90vh] overflow-y-auto">
@@ -1698,7 +2391,6 @@ export default function SuperAdminPage() {
               <X size={20} />
             </button>
 
-            {/* Printable Tax Invoice Container */}
             <div className="space-y-6">
               {/* Invoice Header */}
               <div className="flex items-start justify-between border-b border-slate-200 pb-5">
@@ -1733,13 +2425,20 @@ export default function SuperAdminPage() {
                 </div>
               </div>
 
-              {/* Billed To / Details */}
+              {/* Billed To / Details (with CIN and RERA) */}
               <div className="grid grid-cols-2 gap-4 text-xs">
-                <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
-                  <span className="text-[10px] font-bold uppercase text-slate-400 block mb-1">Billed To (Developer Tenant)</span>
+                <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
+                  <span className="text-[10px] font-bold uppercase text-slate-400 block mb-0.5">Billed To (Developer Tenant)</span>
                   <p className="font-bold text-slate-900 text-sm">{selectedInvoice.companyName}</p>
-                  <p className="text-slate-600 mt-0.5">Corporate Real Estate Entity</p>
-                  <p className="text-slate-500 font-mono text-[11px] mt-1">Tenant ID: {selectedInvoice.companyId}</p>
+                  <p className="text-slate-600 font-mono text-[11px]">
+                    CIN: {selectedInvoice.cin || 'U45200KA2024PTC189201'}
+                  </p>
+                  <p className="text-teal-700 font-mono text-[11px]">
+                    RERA ID: {selectedInvoice.reraNumber || 'PRM/KA/RERA/1251/310/PR/240115'}
+                  </p>
+                  <p className="text-slate-500 font-mono text-[11px]">
+                    GSTIN: {selectedInvoice.gstin || '29AABCE9876F1Z5'}
+                  </p>
                 </div>
 
                 <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-1">

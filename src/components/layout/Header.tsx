@@ -46,7 +46,7 @@ export function Header() {
             className="h-9 flex items-center gap-2 px-3 bg-[#F5F7FA] border border-[#E3E8EF] rounded-lg text-xs font-semibold text-[#17324D] hover:bg-slate-100 transition-colors shadow-2xs"
           >
             <Building size={14} className="text-[#3478C9] shrink-0" />
-            <span className="max-w-[130px] sm:max-w-[170px] truncate">{currentCompany.name}</span>
+            <span className="max-w-[130px] sm:max-w-[170px] truncate">{currentCompany?.name || 'Prestige Estates Projects Ltd'}</span>
             <ChevronDown size={14} className="text-slate-400 shrink-0" />
           </button>
 
