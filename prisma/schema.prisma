@@ -1,382 +1,280 @@
-// Prisma Database Schema for EstateFlow CRM
-// Multi-Tenant Real Estate CRM SaaS Architecture (Section 8)
+// Prisma Schema for EstateFlow Multi-Tenant Real Estate CRM SaaS
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
 
 generator client {
   provider = "prisma-client-js"
 }
 
-datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
-}
-
-// ==========================================
-// 1. TENANT & AUTHENTICATION
-// ==========================================
-
+// 1. Developer Companies (Multi-Tenant Isolation)
 model Company {
-  id           String    @id @default(uuid())
-  name         String
-  code         String    @unique
-  logoUrl      String?
-  plan         String    @default("Starter") // Starter, Professional, Enterprise
-  status       String    @default("Active")  // Active, Suspended, Trial
-  userLimit    Int       @default(5)
-  projectLimit Int       @default(2)
-  contactEmail String
-  phone        String
-  city         String
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  id                 String   @id @default(cuid())
+  name               String
+  code               String   @unique
+  logo               String?
+  plan               String   @default("Professional") // Starter, Professional, Enterprise
+  status             String   @default("Active")       // Active, Suspended, Trial
+  userLimit          Int      @default(20)
+  projectLimit       Int      @default(10)
+  contactEmail       String
+  phone              String
+  city               String
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
 
-  users        User[]
-  projects     Project[]
-  leads        Lead[]
-  units        Unit[]
-  bookings     Booking[]
-  payments     Payment[]
-  brokers      Broker[]
-  templates    MessageTemplate[]
-  workflows    AutomationWorkflow[]
-  auditLogs    AuditLog[]
+  // Statutory Registrations (India Compliance)
+  registrationNumber String?  // CIN / ROC
+  cin                String?
+  reraNumber         String?  // State RERA Promoter ID
+  gstin              String?  // 15-digit GSTIN
+  panNumber          String?
+  address            String?
+  state              String?
+  pincode            String?
+
+  // SaaS Billing
+  monthlyFee         Float    @default(34999)
+  billingCycle       String   @default("Monthly")
+  nextRenewalDate    String?
+  paymentStatus      String   @default("Paid") // Paid, Pending, Overdue
+  adminName          String?
+  adminEmail         String?
+
+  // Relations
+  users              User[]
+  projects           Project[]
+  units              Unit[]
+  leads              Lead[]
+  bookings           Booking[]
+  payments           PaymentRecord[]
+  brokers            Broker[]
+  invoices           SaaSInvoice[]
 
   @@map("companies")
 }
 
+// 2. Users & Stakeholder RBAC Personas
 model User {
-  id              String       @id @default(uuid())
-  companyId       String
-  name            String
-  email           String       @unique
-  passwordHash    String
-  phone           String
-  role            String       // SUPER_ADMIN, COMPANY_ADMIN, SALES_MANAGER, SALES_EXECUTIVE, ACCOUNTS_MANAGER, BROKER
-  department      String
-  designation     String
-  status          String       @default("Active")
-  createdAt       DateTime     @default(now())
-  updatedAt       DateTime     @updatedAt
+  id               String   @id @default(cuid())
+  name             String
+  email            String   @unique
+  phone            String?
+  password         String   @default("admin123")
+  role             String   // SUPER_ADMIN, COMPANY_ADMIN, SALES_MANAGER, SALES_EXECUTIVE, ACCOUNTS_MANAGER, BROKER
+  companyId        String
+  company          Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  department       String?  @default("Operations")
+  designation      String?  @default("Executive")
+  avatar           String?
+  status           String   @default("Active")
+  assignedProjects String[] @default([])
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 
-  company         Company      @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  assignedLeads   Lead[]       @relation("AssignedExecutive")
-  managedLeads    Lead[]       @relation("AssignedManager")
-  activities      LeadActivity[]
-
-  @@index([companyId])
   @@map("users")
 }
 
-// ==========================================
-// 2. PROJECTS, TOWERS & INVENTORY
-// ==========================================
-
+// 3. Real Estate Projects / Portfolios
 model Project {
-  id              String    @id @default(uuid())
-  companyId       String
-  name            String
-  code            String
-  builderName     String
-  category        String    // Residential, Commercial, Mixed
-  type            String    // High-Rise, Luxury Villas, Gated Community, Plots
-  location        String
-  city            String
-  state           String
-  pincode         String
-  reraNumber      String
-  launchDate      DateTime
-  possessionDate  DateTime
-  status          String    // Pre-Launch, Under Construction, Ready to Move
-  totalLandArea   String
-  baseRatePerSqFt Decimal   @db.Decimal(12, 2)
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  id             String   @id @default(cuid())
+  companyId      String
+  company        Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  name           String
+  code           String
+  location       String
+  city           String
+  reraNumber     String?
+  status         String   @default("Active") // Planning, Under Construction, Ready to Move, Sold Out
+  totalUnits     Int      @default(100)
+  availableUnits Int      @default(80)
+  launchDate     String?
+  completionDate String?
+  towers         Tower[]
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
-  company         Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  towers          Tower[]
-  units           Unit[]
-  leads           Lead[]
-  bookings        Booking[]
-
-  @@unique([companyId, code])
-  @@index([companyId])
   @@map("projects")
 }
 
+// 4. Property Towers
 model Tower {
-  id            String    @id @default(uuid())
+  id            String   @id @default(cuid())
   projectId     String
+  project       Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
   name          String
-  code          String
-  totalFloors   Int
-  unitsPerFloor Int
-  totalUnits    Int
-  description   String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-
-  project       Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  floors        Floor[]
+  floorsCount   Int      @default(14)
+  unitsPerFloor Int      @default(4)
   units         Unit[]
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
-  @@index([projectId])
   @@map("towers")
 }
 
-model Floor {
-  id             String    @id @default(uuid())
-  towerId        String
-  floorNumber    Int
-  floorLabel     String
-  floorRisePrice Decimal   @default(0) @db.Decimal(10, 2)
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
-
-  tower          Tower     @relation(fields: [towerId], references: [id], onDelete: Cascade)
-
-  @@index([towerId])
-  @@map("floors")
-}
-
+// 5. Units / Apartments (with Transactional Blocking)
 model Unit {
-  id                 String    @id @default(uuid())
+  id                 String    @id @default(cuid())
   companyId          String
-  projectId          String
+  company            Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
   towerId            String
-  floorNumber        Int
+  tower              Tower     @relation(fields: [towerId], references: [id], onDelete: Cascade)
   unitNumber         String
-  unitType           String    // 1 BHK, 2 BHK, 3 BHK, 4 BHK, Penthouse
-  carpetArea         Decimal   @db.Decimal(10, 2)
-  builtUpArea        Decimal   @db.Decimal(10, 2)
-  superBuiltUpArea   Decimal   @db.Decimal(10, 2)
-  balconyArea        Decimal   @db.Decimal(10, 2)
-  facing             String    // East, North, North-East, West, South
-  basePrice          Decimal   @db.Decimal(14, 2)
-  floorRiseRate      Decimal   @default(0) @db.Decimal(10, 2)
-  plcRate            Decimal   @default(0) @db.Decimal(10, 2)
-  parkingCharges     Decimal   @default(0) @db.Decimal(10, 2)
-  clubhouseCharges   Decimal   @default(0) @db.Decimal(10, 2)
-  maintenanceCharges Decimal   @default(0) @db.Decimal(10, 2)
-  status             String    @default("Available") // Available, Blocked, Reserved, Booked, Sold, On Hold
-  blockedUntil       DateTime?
+  floorNumber        Int
+  configuration      String    // 1 BHK, 2 BHK, 3 BHK, 4 BHK, Villa, Penthouse
+  superBuiltUpArea   Float
+  carpetArea         Float
+  facing             String    @default("North") // North, South, East, West, Park View
+  baseRatePerSqFt    Float     @default(7500)
+  totalCost          Float
+  status             String    @default("Available") // Available, Blocked, Reserved, Booked, Sold
   blockedBy          String?
+  blockedUntil       DateTime?
+  ownerCustomerName  String?
+  ownerMobile        String?
   createdAt          DateTime  @default(now())
   updatedAt          DateTime  @updatedAt
 
-  company            Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  project            Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  tower              Tower     @relation(fields: [towerId], references: [id], onDelete: Cascade)
   bookings           Booking[]
 
-  @@unique([projectId, towerId, unitNumber])
-  @@index([companyId, status])
   @@map("units")
 }
 
-// ==========================================
-// 3. LEAD MANAGEMENT & ACTIVITIES
-// ==========================================
-
+// 6. Omni-Channel Leads
 model Lead {
-  id                     String    @id @default(uuid())
+  id                     String     @id @default(cuid())
+  leadNumber             String     @unique
   companyId              String
-  leadNumber             String    @unique
+  company                Company    @relation(fields: [companyId], references: [id], onDelete: Cascade)
   fullName               String
   mobile                 String
   alternateMobile        String?
-  email                  String
-  city                   String
-  state                  String
-  preferredContactMethod String    // Phone, WhatsApp, Email
-  
-  interestedProjectId    String
-  propertyType           String
-  configuration          String
-  budgetMin              Decimal   @db.Decimal(10, 2)
-  budgetMax              Decimal   @db.Decimal(10, 2)
-  preferredFloor         String?
-  purpose                String    // End-use, Investment
-  possessionPreference   String    // Ready to Move, Under Construction
-
-  source                 String    // Meta, Google Ads, 99acres, Broker Referral, Walk-in
-  campaign               String?
-  priority               String    // Hot, Warm, Cold, Qualified
-  assignedManagerId      String?
-  assignedExecutiveId    String?
-  status                 String    @default("New") // New, Contacted, Qualified, Interested, Site Visit Scheduled, Site Visit Completed, Negotiation, Booked, Lost
-  aiScore                Int       @default(50)
+  email                  String?
+  city                   String?
+  preferredContactMethod String     @default("Phone")
+  interestedProjectId    String?
+  propertyType           String?    @default("Apartment")
+  configuration          String?    @default("3 BHK")
+  budgetMin              Float?     @default(100)
+  budgetMax              Float?     @default(160)
+  source                 String     @default("Website Form")
+  priority               String     @default("Warm") // Hot, Warm, Cold
+  status                 String     @default("New")  // New, Contacted, Site Visit Scheduled, Site Visit Completed, Negotiation, Booked, Lost
+  aiScore                Int        @default(75)     // 0 - 100
   notes                  String?
-  nextFollowUpDate       DateTime?
-  createdAt              DateTime  @default(now())
-  updatedAt              DateTime  @updatedAt
-
-  company                Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  project                Project   @relation(fields: [interestedProjectId], references: [id])
-  assignedExecutive      User?     @relation("AssignedExecutive", fields: [assignedExecutiveId], references: [id])
-  assignedManager        User?     @relation("AssignedManager", fields: [assignedManagerId], references: [id])
-  activities             LeadActivity[]
+  assignedExecutiveId    String?
+  assignedManagerId      String?
+  nextFollowUpDate       String?
   followUps              FollowUp[]
-  bookings               Booking[]
+  createdAt              DateTime   @default(now())
+  updatedAt              DateTime   @updatedAt
 
-  @@index([companyId, status])
-  @@index([companyId, mobile])
   @@map("leads")
 }
 
-model LeadActivity {
-  id          String    @id @default(uuid())
-  leadId      String
-  userId      String?
-  type        String    // Call, Meeting, Note, Email, WhatsApp, Site Visit, Status Change
-  title       String
-  description String
-  createdAt   DateTime  @default(now())
-
-  lead        Lead      @relation(fields: [leadId], references: [id], onDelete: Cascade)
-  user        User?     @relation(fields: [userId], references: [id])
-
-  @@index([leadId])
-  @@map("lead_activities")
-}
-
+// 7. Follow-Up Schedule
 model FollowUp {
-  id              String    @id @default(uuid())
+  id              String    @id @default(cuid())
   companyId       String
   leadId          String
-  assignedToId    String
-  type            String    // Phone Call, WhatsApp, Email, Meeting, Site Visit
-  dateTime        DateTime
-  remarks         String
+  lead            Lead      @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  scheduledAt     DateTime
+  type            String    @default("Phone Call") // Phone Call, WhatsApp, Meeting, Site Visit
+  executiveName   String
+  notes           String?
   isCompleted     Boolean   @default(false)
   completionNotes String?
   completedAt     DateTime?
   createdAt       DateTime  @default(now())
 
-  lead            Lead      @relation(fields: [leadId], references: [id], onDelete: Cascade)
-
-  @@index([companyId, isCompleted, dateTime])
   @@map("follow_ups")
 }
 
-// ==========================================
-// 4. BOOKINGS, PAYMENTS & AUDIT TRAIL
-// ==========================================
-
+// 8. Confirmed Unit Bookings
 model Booking {
-  id                   String    @id @default(uuid())
-  companyId            String
-  bookingNumber        String    @unique
-  projectId            String
-  unitId               String
-  leadId               String
-  customerName         String
-  customerMobile       String
-  customerEmail        String
-  agreedPrice          Decimal   @db.Decimal(14, 2)
-  bookingAmount        Decimal   @db.Decimal(14, 2)
-  paymentPlan          String
-  salesExecutiveName   String
-  brokerId             String?
-  status               String    @default("Pending Approval") // Draft, Pending Approval, Approved, Confirmed, Cancelled
-  bookingDate          DateTime  @default(now())
-  notes                String?
-  createdAt            DateTime  @default(now())
-  updatedAt            DateTime  @updatedAt
+  id                  String          @id @default(cuid())
+  bookingNumber       String          @unique
+  companyId           String
+  company             Company         @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  unitId              String
+  unit                Unit            @relation(fields: [unitId], references: [id])
+  customerName        String
+  customerMobile      String
+  customerEmail       String
+  customerPan         String?
+  totalAgreementValue Float
+  bookingAmountPaid   Float
+  paymentPlan         String          @default("Construction Linked Plan (CLP)")
+  status              String          @default("Approved") // Draft, Pending Approval, Approved, Confirmed, Cancelled
+  bookingDate         String
+  payments            PaymentRecord[]
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime        @updatedAt
 
-  company              Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  project              Project   @relation(fields: [projectId], references: [id])
-  unit                 Unit      @relation(fields: [unitId], references: [id])
-  lead                 Lead      @relation(fields: [leadId], references: [id])
-  payments             Payment[]
-
-  @@index([companyId, status])
   @@map("bookings")
 }
 
-model Payment {
-  id              String    @id @default(uuid())
-  companyId       String
-  bookingId       String
-  receiptNumber   String    @unique
-  customerName    String
-  unitNumber      String
-  amount          Decimal   @db.Decimal(14, 2)
-  paymentMethod   String    // Bank Transfer, UPI, Cheque, Gateway
-  referenceNumber String
-  paymentDate     DateTime  @default(now())
-  status          String    @default("Confirmed")
-  receivedBy      String
-  createdAt       DateTime  @default(now())
+// 9. Payment Transactions & Receipts
+model PaymentRecord {
+  id             String   @id @default(cuid())
+  receiptNumber  String   @unique
+  companyId      String
+  company        Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  bookingId      String?
+  booking        Booking? @relation(fields: [bookingId], references: [id], onDelete: SetNull)
+  customerName   String
+  amountPaid     Float
+  paymentMode    String   @default("RTGS") // RTGS, NEFT, Cheque, UPI, Razorpay
+  transactionRef String?
+  paymentDate    String
+  status         String   @default("Confirmed")
+  createdAt      DateTime @default(now())
 
-  company         Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  booking         Booking   @relation(fields: [bookingId], references: [id])
-
-  @@index([companyId, bookingId])
   @@map("payments")
 }
 
+// 10. Channel Partner Brokers
 model Broker {
-  id                   String    @id @default(uuid())
-  companyId            String
-  name                 String
-  agencyName           String
-  reraRegistration     String
-  mobile               String
-  email                String
-  city                 String
-  commissionPercentage Decimal   @db.Decimal(5, 2)
-  status               String    @default("Active")
-  createdAt            DateTime  @default(now())
+  id                String   @id @default(cuid())
+  companyId         String
+  company           Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  name              String
+  firmName          String
+  reraNumber        String
+  mobile            String
+  email             String?
+  tier              String   @default("Gold") // Platinum, Gold, Silver
+  commissionRate    Float    @default(2.5)
+  totalBookingsDone Int      @default(0)
+  status            String   @default("Active")
+  createdAt         DateTime @default(now())
 
-  company              Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
-
-  @@index([companyId])
   @@map("brokers")
 }
 
-model MessageTemplate {
-  id        String    @id @default(uuid())
-  companyId String
-  channel   String    // WhatsApp, Email
-  title     String
-  category  String
-  content   String
-  approved  Boolean   @default(true)
-  createdAt DateTime  @default(now())
+// 11. SaaS Monthly Invoices
+model SaaSInvoice {
+  id            String   @id @default(cuid())
+  invoiceNumber String   @unique
+  companyId     String
+  company       Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  companyName   String
+  planName      String
+  billingPeriod String
+  baseAmount    Float
+  gstAmount     Float
+  totalAmount   Float
+  dueDate       String
+  paidDate      String?
+  status        String   @default("Paid") // Paid, Pending, Overdue
+  paymentMethod String   @default("Razorpay Auto-Debit")
+  paymentRef    String?
+  cin           String?
+  reraNumber    String?
+  gstin         String?
+  createdAt     DateTime @default(now())
 
-  company   Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
-
-  @@index([companyId])
-  @@map("message_templates")
+  @@map("saas_invoices")
 }
-
-model AutomationWorkflow {
-  id        String    @id @default(uuid())
-  companyId String
-  name      String
-  trigger   String
-  isActive  Boolean   @default(true)
-  createdAt DateTime  @default(now())
-
-  company   Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
-
-  @@index([companyId])
-  @@map("automation_workflows")
-}
-
-model AuditLog {
-  id          String    @id @default(uuid())
-  companyId   String?
-  userId      String?
-  action      String
-  module      String
-  ipAddress   String?
-  userAgent   String?
-  details     String
-  createdAt   DateTime  @default(now())
-
-  company     Company?  @relation(fields: [companyId], references: [id], onDelete: Cascade)
-
-  @@index([companyId, createdAt])
-  @@map("audit_logs")
-}
-
