@@ -25,13 +25,14 @@ import { formatINR, formatDate, getLeadPriorityStyle, getLeadStatusColor } from 
 import { LeadPriority, LeadStatus } from '@/types';
 
 export default function LeadsPage() {
-  const { leads, addLead, currentCompany, hasPermission } = useTenant();
+  const { leads, addLead, currentCompany, hasPermission, currentRole, currentUser } = useTenant();
 
   // Search & Filter state
   const [searchTerm, setSearchTerm] = useState('');
   const [priorityFilter, setPriorityFilter] = useState('All');
   const [statusFilter, setStatusFilter] = useState('All');
   const [sourceFilter, setSourceFilter] = useState('All');
+  const [onlyMyLeads, setOnlyMyLeads] = useState(currentRole === 'SALES_EXECUTIVE' || currentRole === 'BROKER');
 
   // Modal State
   const [showAddModal, setShowAddModal] = useState(false);
@@ -110,8 +111,19 @@ export default function LeadsPage() {
     });
   };
 
-  // Filtered Leads
+  // Filtered Leads according to RBAC Role
   const filteredLeads = leads.filter((lead) => {
+    // If external broker, only show broker attributed leads
+    if (currentRole === 'BROKER') {
+      if (lead.source !== 'Broker Referral' && !lead.notes?.toLowerCase().includes('apex')) {
+        return false;
+      }
+    } else if (currentRole === 'SALES_EXECUTIVE' && onlyMyLeads) {
+      if (lead.assignedExecutiveId !== currentUser.id && lead.assignedExecutiveId !== 'user-sales-exec-1') {
+        return false;
+      }
+    }
+
     const matchesSearch =
       lead.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       lead.mobile.includes(searchTerm) ||
@@ -151,17 +163,56 @@ export default function LeadsPage() {
 
   return (
     <div className="space-y-6">
+      {/* Role-Specific Context Notification Banner */}
+      {currentRole === 'SALES_EXECUTIVE' && (
+        <div className="p-3.5 bg-teal-50 border border-teal-200 rounded-xl flex items-center justify-between text-xs text-teal-900">
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-teal-500 animate-pulse"></span>
+            <span>
+              <strong>Sales Executive View:</strong> Showing leads assigned to <strong>{currentUser?.name || 'Rohan Sharma'}</strong>.
+            </span>
+          </div>
+          <button
+            onClick={() => setOnlyMyLeads(!onlyMyLeads)}
+            className="text-[11px] font-bold underline hover:text-teal-950"
+          >
+            {onlyMyLeads ? 'Show All Company Leads' : 'Filter Back to My Assigned Leads'}
+          </button>
+        </div>
+      )}
+
+      {currentRole === 'BROKER' && (
+        <div className="p-3.5 bg-purple-50 border border-purple-200 rounded-xl flex items-center justify-between text-xs text-purple-900">
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-purple-500"></span>
+            <span>
+              <strong>Channel Partner Registry (Apex Realty):</strong> Showing your tagged buyer leads. 90-day anti-poaching lock active.
+            </span>
+          </div>
+          <button
+            onClick={() => setShowAddModal(true)}
+            className="text-[11px] font-bold bg-purple-600 text-white px-2.5 py-1 rounded hover:bg-purple-700"
+          >
+            + Register New Client
+          </button>
+        </div>
+      )}
+
       {/* Header & Controls */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded-card border border-estate-border shadow-sm">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-xl font-black text-estate-navy">Lead Management (Lead 360)</h1>
+            <h1 className="text-xl font-black text-estate-navy">
+              {currentRole === 'BROKER' ? 'My Registered Clients (Channel Partner)' : 'Lead Management (Lead 360)'}
+            </h1>
             <span className="text-xs bg-slate-100 text-slate-700 font-bold px-2 py-0.5 rounded-full">
               {filteredLeads.length} Total
             </span>
           </div>
           <p className="text-xs text-estate-muted mt-0.5">
-            Capture, qualify, deduplicate and track enquiries from all digital and channel partner sources
+            {currentRole === 'BROKER'
+              ? 'Track the qualification, site visit and booking progression of your referred clients'
+              : 'Capture, qualify, deduplicate and track enquiries from all digital and channel partner sources'}
           </p>
         </div>
 

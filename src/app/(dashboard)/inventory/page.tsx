@@ -27,7 +27,7 @@ import { formatINR, getUnitStatusStyle } from '@/lib/utils';
 import { INITIAL_TOWERS } from '@/lib/mockData';
 
 export default function InventoryPage() {
-  const { units, blockUnit, releaseUnit, updateUnitStatus, currentUser, hasPermission } = useTenant();
+  const { units, blockUnit, releaseUnit, updateUnitStatus, currentUser, hasPermission, currentRole } = useTenant();
 
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
   const [selectedTower, setSelectedTower] = useState('tower-a');
@@ -70,6 +70,36 @@ export default function InventoryPage() {
 
   return (
     <div className="space-y-6">
+      {/* Role-Specific Banner */}
+      {currentRole === 'BROKER' && (
+        <div className="p-3.5 bg-purple-50 border border-purple-200 rounded-xl flex items-center justify-between text-xs text-purple-900">
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-purple-600"></span>
+            <span>
+              <strong>Channel Partner Live Inventory:</strong> Live units available for booking with client commission protection.
+            </span>
+          </div>
+          <Link
+            href="/cost-sheets"
+            className="text-[11px] font-bold bg-purple-600 text-white px-2.5 py-1 rounded hover:bg-purple-700"
+          >
+            Calculate Buyer Cost Sheet →
+          </Link>
+        </div>
+      )}
+
+      {currentRole === 'SALES_EXECUTIVE' && (
+        <div className="p-3.5 bg-teal-50 border border-teal-200 rounded-xl flex items-center justify-between text-xs text-teal-900">
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-teal-500 animate-pulse"></span>
+            <span>
+              <strong>Sales Advisor Authority:</strong> Click any Available unit to initiate instant <strong>72-Hour Token Hold</strong>.
+            </span>
+          </div>
+          <span className="text-[10px] font-mono text-teal-700 font-bold">Auto-expires after 72 hours</span>
+        </div>
+      )}
+
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded-card border border-estate-border shadow-sm">
         <div>

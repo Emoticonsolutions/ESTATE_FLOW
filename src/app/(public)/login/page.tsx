@@ -100,7 +100,7 @@ function LoginContent() {
       personaTitle: 'Senior Property Advisor',
       description: 'Daily follow-up reminders, outbound calls, site visits, unit blocking, and brochure sharing.',
       capabilities: ['Capture Leads & Log Follow-up Notes', '72-Hour Transactional Unit Blocking', 'Generate Cost Estimates & WhatsApp Share'],
-      redirectTo: '/leads',
+      redirectTo: '/dashboard',
     },
     {
       id: 'accounts',
@@ -116,7 +116,7 @@ function LoginContent() {
       personaTitle: 'Head of Billing & Receivables',
       description: 'Milestone installment schedules, demand letters, payment realizations, and stamped receipts.',
       capabilities: ['Record RTGS/UPI/Cheque Customer Payments', 'Issue Official Stamped Digital Receipts', 'Generate RERA Milestone Demand Letters'],
-      redirectTo: '/collections',
+      redirectTo: '/dashboard',
     },
     {
       id: 'broker',
@@ -132,7 +132,7 @@ function LoginContent() {
       personaTitle: 'Managing Partner - Apex Channel Partners',
       description: 'External broker enquiry registration, attributed deals, client tracking, and commission payout statements.',
       capabilities: ['Register Client Enquiries with Ownership Tag', 'Track Attributed Bookings & Unit Allotments', 'Check Commission Slabs & Disbursal Status'],
-      redirectTo: '/brokers',
+      redirectTo: '/dashboard',
     },
   ];
 

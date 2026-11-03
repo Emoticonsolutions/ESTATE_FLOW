@@ -22,7 +22,7 @@ import { INITIAL_BROKERS, INITIAL_BROKER_DEALS } from '@/lib/mockData';
 import { Broker, BrokerDeal } from '@/types';
 
 export default function BrokersPage() {
-  const { currentCompany, hasPermission } = useTenant();
+  const { currentCompany, hasPermission, currentRole, currentUser } = useTenant();
   const [activeTab, setActiveTab] = useState<'brokers' | 'deals' | 'commissions'>('brokers');
   const [brokersList, setBrokersList] = useState<Broker[]>(INITIAL_BROKERS);
   const [dealsList, setDealsList] = useState<BrokerDeal[]>(INITIAL_BROKER_DEALS);
@@ -61,6 +61,115 @@ export default function BrokersPage() {
       prev.map((d) => (d.id === dealId ? { ...d, payoutStatus: 'Approved' } : d))
     );
   };
+
+  // Dedicated Channel Partner View
+  if (currentRole === 'BROKER') {
+    const myDeals = dealsList.filter((d) => d.brokerId === 'broker-1');
+    const myTotalEarned = myDeals.reduce((sum, d) => sum + d.commissionAmount, 0) || 6125000;
+    const myPending = 925000;
+    const myDisbursed = myTotalEarned - myPending;
+
+    return (
+      <div className="space-y-6">
+        {/* Broker Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded-card border border-estate-border shadow-sm">
+          <div>
+            <div className="flex items-center gap-2">
+              <h1 className="text-xl font-black text-estate-navy">Commission Ledger & Payout Statement</h1>
+              <span className="text-xs bg-purple-50 text-purple-700 font-bold px-2 py-0.5 rounded-full border border-purple-200">
+                Apex Channel Partners • Tier-1 Partner
+              </span>
+            </div>
+            <p className="text-xs text-estate-muted mt-0.5">
+              RERA Reg: <strong>AG/KA/RERA/2021/000492</strong> • Managing Partner: <strong>Kunal Verma</strong> • Slab: <strong>2.5%</strong>
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => alert('Tax Invoice #INV-APEX-2026-09 with 5% TDS Form 16A downloaded!')}
+              className="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-lg text-xs font-bold transition-all"
+            >
+              Download Tax Invoice (PDF)
+            </button>
+            <button
+              onClick={() => alert('Form 16A TDS Certificate (Q2 FY 2026) downloaded!')}
+              className="px-3.5 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-xs font-bold transition-all shadow-sm"
+            >
+              Download TDS Certificate
+            </button>
+          </div>
+        </div>
+
+        {/* Broker Metric Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="bg-white p-5 rounded-card border border-estate-border shadow-sm">
+            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block">Total Commission Earned</span>
+            <p className="text-2xl font-black text-estate-navy mt-1">₹61.25 Lakhs</p>
+            <span className="text-[11px] text-purple-700 font-semibold mt-1 block">Across 14 booked units (₹24.5 Cr volume)</span>
+          </div>
+
+          <div className="bg-white p-5 rounded-card border border-estate-border shadow-sm">
+            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block">Disbursed via RTGS</span>
+            <p className="text-2xl font-black text-emerald-600 mt-1">₹52.00 Lakhs</p>
+            <span className="text-[11px] text-emerald-700 font-semibold mt-1 block">Credited to HDFC Bank A/c ending 8812</span>
+          </div>
+
+          <div className="bg-white p-5 rounded-card border border-estate-border shadow-sm">
+            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block">Pending Clearance</span>
+            <p className="text-2xl font-black text-amber-600 mt-1">₹9.25 Lakhs</p>
+            <span className="text-[11px] text-amber-700 font-semibold mt-1 block">Scheduled for 10th of this month</span>
+          </div>
+        </div>
+
+        {/* My Closed Deals Table */}
+        <div className="bg-white rounded-card border border-estate-border shadow-sm overflow-hidden">
+          <div className="p-4 border-b border-slate-100 flex items-center justify-between">
+            <h2 className="text-sm font-bold text-estate-navy">Deals Attributed to Apex Channel Partners</h2>
+            <span className="text-xs font-bold bg-slate-100 text-slate-700 px-2 py-0.5 rounded">
+              {myDeals.length} Deals Listed
+            </span>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs text-left">
+              <thead className="bg-slate-50 text-slate-600 font-semibold uppercase tracking-wider border-b border-slate-200">
+                <tr>
+                  <th className="p-3.5">Deal ID</th>
+                  <th className="p-3.5">Client Name</th>
+                  <th className="p-3.5">Unit Allocated</th>
+                  <th className="p-3.5">Deal Value</th>
+                  <th className="p-3.5">Commission (2.5%)</th>
+                  <th className="p-3.5">Payout Status</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {myDeals.map((deal) => (
+                  <tr key={deal.id} className="hover:bg-slate-50/80 transition-colors">
+                    <td className="p-3.5 font-mono text-slate-500 font-bold">{deal.id}</td>
+                    <td className="p-3.5">
+                      <p className="font-bold text-slate-900">{deal.clientName}</p>
+                      <p className="text-[11px] text-slate-400">{deal.clientMobile}</p>
+                    </td>
+                    <td className="p-3.5 font-semibold text-slate-700">{deal.unitNumber}</td>
+                    <td className="p-3.5 font-bold text-slate-900">{formatINR(deal.dealValue)}</td>
+                    <td className="p-3.5 font-bold text-emerald-700">{formatINR(deal.commissionAmount)}</td>
+                    <td className="p-3.5">
+                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                        deal.payoutStatus === 'Approved' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
+                      }`}>
+                        {deal.payoutStatus}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
