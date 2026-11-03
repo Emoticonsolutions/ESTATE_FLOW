@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { ArrowLeft, Building2, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, Building2, CheckCircle2, Lock } from 'lucide-react';
 
 export default function AboutPage() {
   return (
@@ -28,12 +28,21 @@ export default function AboutPage() {
             </div>
           </div>
 
-          <Link
-            href="/dashboard"
-            className="inline-flex items-center gap-2 px-6 py-3 bg-[#3478C9] hover:bg-blue-600 text-white rounded-lg font-bold text-sm shadow-md transition-all"
-          >
-            Explore the Live Application →
-          </Link>
+          <div className="flex flex-wrap items-center gap-3">
+            <Link
+              href="/contact"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-[#159D91] hover:bg-teal-600 text-white rounded-lg font-bold text-sm shadow-md transition-all"
+            >
+              Book an Executive Demo →
+            </Link>
+            <Link
+              href="/login"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-[#17324D] hover:bg-[#244761] text-white rounded-lg font-bold text-sm shadow-md transition-all"
+            >
+              <Lock size={15} />
+              <span>Stakeholder Login</span>
+            </Link>
+          </div>
         </div>
       </div>
     </div>

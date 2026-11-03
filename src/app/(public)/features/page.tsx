@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { ArrowLeft, Check, Sparkles, Building2, Shield, Zap, Database } from 'lucide-react';
+import { ArrowLeft, Check, Sparkles, Building2, Shield, Zap, Database, Lock } from 'lucide-react';
 
 export default function FeaturesPage() {
   const modules = [
@@ -52,12 +52,19 @@ export default function FeaturesPage() {
           ))}
         </div>
 
-        <div className="mt-12 text-center">
+        <div className="mt-12 flex flex-wrap items-center justify-center gap-3">
           <Link
-            href="/dashboard"
-            className="inline-flex items-center gap-2 px-6 py-3 bg-[#3478C9] hover:bg-blue-600 text-white rounded-lg font-bold text-sm shadow-md transition-all"
+            href="/contact"
+            className="inline-flex items-center gap-2 px-6 py-3 bg-[#159D91] hover:bg-teal-600 text-white rounded-lg font-bold text-sm shadow-md transition-all"
           >
-            Launch Interactive CRM Dashboard →
+            Book a Personalized Demo →
+          </Link>
+          <Link
+            href="/login"
+            className="inline-flex items-center gap-2 px-6 py-3 bg-[#17324D] hover:bg-[#244761] text-white rounded-lg font-bold text-sm shadow-md transition-all"
+          >
+            <Lock size={15} />
+            <span>Stakeholder Login</span>
           </Link>
         </div>
       </div>

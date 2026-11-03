@@ -20,6 +20,7 @@ import {
   Film,
   CheckCircle2,
   Layers,
+  Lock,
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -255,13 +256,22 @@ export function DemoVideoPlayer() {
               <p className="text-xs text-slate-400 mt-1">{selectedVideo.subtitle}</p>
             </div>
 
-            <Link
-              href="/dashboard"
-              className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-[#3478C9] hover:bg-blue-600 text-white rounded-lg text-xs font-bold shadow-md transition-all shrink-0"
-            >
-              <span>Try Live CRM Dashboard</span>
-              <ChevronRight size={14} />
-            </Link>
+            <div className="flex items-center gap-2">
+              <Link
+                href="/contact"
+                className="inline-flex items-center justify-center gap-1.5 px-4 py-2 bg-[#159D91] hover:bg-teal-600 text-white rounded-lg text-xs font-bold shadow-md transition-all shrink-0"
+              >
+                <span>Book a Live Demo</span>
+                <ChevronRight size={14} />
+              </Link>
+              <Link
+                href="/login"
+                className="inline-flex items-center justify-center gap-1.5 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white border border-slate-700 rounded-lg text-xs font-bold transition-all shrink-0"
+              >
+                <Lock size={13} className="text-slate-400" />
+                <span>Stakeholder Login</span>
+              </Link>
+            </div>
           </div>
         </div>
       </div>
@@ -327,10 +337,11 @@ export function DemoVideoPlayer() {
           </div>
 
           <Link
-            href={chapters[activeChapterIndex].targetModuleUrl}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-slate-100 text-[#3478C9] border border-slate-200 rounded-lg text-xs font-bold transition-all shadow-xs shrink-0"
+            href="/login"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-slate-100 text-[#17324D] border border-slate-200 rounded-lg text-xs font-bold transition-all shadow-xs shrink-0"
           >
-            <span>{chapters[activeChapterIndex].moduleName}</span>
+            <Lock size={12} className="text-slate-500" />
+            <span>Login to Access {chapters[activeChapterIndex].tag}</span>
             <ExternalLink size={12} />
           </Link>
         </div>

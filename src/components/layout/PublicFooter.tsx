@@ -1,6 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
-import { Building2, ShieldCheck, Mail, Phone, MapPin } from 'lucide-react';
+import { Building2, ShieldCheck, Mail, Phone, MapPin, Lock } from 'lucide-react';
 
 export function PublicFooter() {
   return (
@@ -59,8 +59,8 @@ export function PublicFooter() {
               <li><Link href="/pricing" className="hover:text-white transition-colors">SaaS Pricing Plans</Link></li>
               <li><Link href="/features" className="hover:text-white transition-colors">System Capabilities</Link></li>
               <li><Link href="/about" className="hover:text-white transition-colors">About the Architecture</Link></li>
-              <li><Link href="/contact" className="hover:text-white transition-colors">Enterprise Contact</Link></li>
-              <li><Link href="/dashboard" className="text-blue-400 font-bold hover:underline">Open Live Dashboard →</Link></li>
+              <li><Link href="/contact" className="hover:text-white transition-colors">Book a Demo Walkthrough</Link></li>
+              <li><Link href="/login" className="text-teal-400 font-bold hover:underline flex items-center gap-1"><Lock size={12} /><span>Stakeholder Login (Live Access) →</span></Link></li>
             </ul>
           </div>
         </div>

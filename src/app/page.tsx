@@ -23,6 +23,7 @@ import {
   HelpCircle,
   FileText,
   Clock,
+  Calendar,
 } from 'lucide-react';
 import { DemoVideoPlayer } from '@/components/landing/DemoVideoPlayer';
 import { PublicNavbar } from '@/components/layout/PublicNavbar';
@@ -130,28 +131,28 @@ export default function HomePage() {
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link
-              href="/dashboard"
+              href="/contact"
+              className="w-full sm:w-auto px-8 py-3.5 bg-[#159D91] hover:bg-teal-600 text-white rounded-xl text-sm font-bold shadow-lg shadow-teal-700/20 transition-all flex items-center justify-center gap-2"
+            >
+              <Calendar size={16} />
+              <span>Book an Executive Demo</span>
+            </Link>
+
+            <Link
+              href="/login"
               className="w-full sm:w-auto px-8 py-3.5 bg-[#17324D] hover:bg-[#244761] text-white rounded-xl text-sm font-bold shadow-xl shadow-slate-900/10 transition-all flex items-center justify-center gap-2"
             >
-              <span>Explore Live Dashboard</span>
-              <ArrowRight size={16} />
+              <Lock size={15} className="text-slate-300" />
+              <span>Stakeholder Login (Live Access)</span>
             </Link>
 
             <a
               href="#demo-video"
-              className="w-full sm:w-auto px-8 py-3.5 bg-white border border-slate-300 hover:border-[#3478C9] text-slate-800 rounded-xl text-sm font-bold transition-all shadow-sm flex items-center justify-center gap-2 group"
+              className="w-full sm:w-auto px-6 py-3.5 bg-white border border-slate-300 hover:border-[#3478C9] text-slate-800 rounded-xl text-sm font-bold transition-all shadow-sm flex items-center justify-center gap-2 group"
             >
-              <Play size={16} className="text-[#3478C9] fill-[#3478C9] group-hover:scale-110 transition-transform" />
-              <span>Watch Interactive Product Tour (3:45)</span>
+              <Play size={15} className="text-[#3478C9] fill-[#3478C9] group-hover:scale-110 transition-transform" />
+              <span>Watch Video Tour (3:45)</span>
             </a>
-
-            <Link
-              href="/login"
-              className="w-full sm:w-auto px-6 py-3.5 bg-teal-50 text-teal-800 border border-teal-300 hover:bg-teal-100 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-1.5"
-            >
-              <Lock size={15} />
-              <span>Dedicated Stakeholder Logins</span>
-            </Link>
           </div>
 
           {/* Key Trust Proof Metrics Bar */}
@@ -308,8 +309,8 @@ export default function HomePage() {
             <p className="text-xs text-slate-600 mt-1 leading-relaxed">
               12 live KPI widgets, conversion funnel, lead source distribution, monthly contracted sales in ₹ Crores, and sales leaderboard.
             </p>
-            <Link href="/dashboard" className="text-xs text-estate-blue font-bold hover:underline mt-3 inline-block">
-              Open Dashboard →
+            <Link href="/login" className="text-xs text-[#3478C9] font-bold hover:underline mt-3 inline-block">
+              Login to Access Dashboard →
             </Link>
           </div>
 
@@ -462,23 +463,23 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto flex flex-col lg:flex-row items-center justify-between gap-8">
           <div>
             <span className="text-teal-400 text-xs font-bold uppercase tracking-widest">Ready to Transform Your Realty Sales?</span>
-            <h3 className="text-2xl sm:text-3xl font-extrabold mt-1">Start Exploring EstateFlow CRM on Localhost</h3>
+            <h3 className="text-2xl sm:text-3xl font-extrabold mt-1">Transform Your Realty Sales Lifecycle</h3>
             <p className="text-slate-300 text-xs max-w-2xl mt-1.5 leading-relaxed">
-              Experience the entire system live right now with preconfigured builder tenants, realistic project towers, leads, and working stakeholder logins.
+              Book a live 1-on-1 walkthrough with an enterprise product specialist or sign in with an authorized stakeholder account.
             </p>
           </div>
           <div className="flex items-center gap-3">
             <Link
+              href="/contact"
+              className="px-6 py-3 bg-[#159D91] hover:bg-teal-600 text-white rounded-lg font-bold text-xs shadow-md transition-all whitespace-nowrap"
+            >
+              Book an Executive Demo →
+            </Link>
+            <Link
               href="/login"
               className="px-6 py-3 bg-white text-[#17324D] hover:bg-slate-100 rounded-lg font-bold text-xs shadow-md transition-all whitespace-nowrap"
             >
-              Select Stakeholder Portal →
-            </Link>
-            <Link
-              href="/dashboard"
-              className="px-6 py-3 bg-[#3478C9] hover:bg-blue-600 text-white rounded-lg font-bold text-xs shadow-md transition-all whitespace-nowrap"
-            >
-              Enter Live CRM Dashboard →
+              Stakeholder Login (Live Access) →
             </Link>
           </div>
         </div>

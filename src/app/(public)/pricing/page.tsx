@@ -109,7 +109,7 @@ export default function PricingPage() {
               </div>
 
               <Link
-                href="/dashboard"
+                href="/contact"
                 className={`w-full py-2.5 rounded-lg text-xs font-bold text-center transition-all ${
                   p.popular
                     ? 'bg-[#3478C9] hover:bg-blue-600 text-white shadow-md'
