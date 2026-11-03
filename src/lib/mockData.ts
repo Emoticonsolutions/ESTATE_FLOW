@@ -142,14 +142,14 @@ export const INITIAL_COMPANIES: Company[] = [
 export const INITIAL_USERS: User[] = [
   {
     id: 'user-super-admin',
-    name: 'Rajesh Malhotra',
-    email: 'admin@estateflow.io',
+    name: 'Platform Owner (Emoticon Solutions)',
+    email: 'solutionsemoticon@gmail.com',
     phone: '+91 98100 12345',
-    password: 'root123',
+    password: 'SuperAdmin@123',
     role: 'SUPER_ADMIN',
     companyId: 'comp-prestige',
     department: 'Platform Administration',
-    designation: 'Chief Technology Officer',
+    designation: 'Platform Owner & Super Admin',
     assignedProjects: ['proj-1', 'proj-2', 'proj-3'],
     status: 'Active',
   },

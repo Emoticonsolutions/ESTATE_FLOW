@@ -100,7 +100,19 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
         const saved = localStorage.getItem('estateflow_all_users');
         if (saved) {
           const parsed = JSON.parse(saved);
-          if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            // Guarantee platform owner super admin credentials match
+            return parsed.map((u: User) =>
+              u.role === 'SUPER_ADMIN'
+                ? {
+                    ...u,
+                    name: 'Platform Owner (Emoticon Solutions)',
+                    email: 'solutionsemoticon@gmail.com',
+                    password: 'SuperAdmin@123',
+                  }
+                : u
+            );
+          }
         }
       } catch {}
     }
@@ -148,7 +160,10 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
 
   // Working login for all stakeholders (dynamic check across allUsers)
   const login = (email: string, password?: string, targetRole?: UserRole) => {
-    const cleanEmail = email.trim().toLowerCase();
+    let cleanEmail = email.trim().toLowerCase();
+    if (cleanEmail === 'solutionsemoticon@gmail') {
+      cleanEmail = 'solutionsemoticon@gmail.com';
+    }
 
     // Find user by email or by target role
     let user = allUsers.find((u) => u.email.toLowerCase() === cleanEmail);
@@ -160,19 +175,25 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
       return { success: false, message: `Account with email "${email}" is not registered in the system.` };
     }
 
-    // Verify password if provided
-    const validPassword = user.password || 'admin123';
-    if (
-      password &&
-      password !== validPassword &&
-      password !== 'admin123' &&
-      password !== 'root123' &&
-      password !== 'sales123' &&
-      password !== 'accts123' &&
-      password !== 'broker123' &&
-      password !== 'password'
-    ) {
-      return { success: false, message: `Incorrect password for ${user.email}. Default password is: ${validPassword}` };
+    // Strict authentication for SUPER_ADMIN
+    if (user.role === 'SUPER_ADMIN') {
+      if (!password || password !== 'SuperAdmin@123') {
+        return { success: false, message: 'Invalid root security credentials for Super Admin console.' };
+      }
+    } else {
+      // Verify password if provided for regular users
+      const validPassword = user.password || 'admin123';
+      if (
+        password &&
+        password !== validPassword &&
+        password !== 'admin123' &&
+        password !== 'sales123' &&
+        password !== 'accts123' &&
+        password !== 'broker123' &&
+        password !== 'password'
+      ) {
+        return { success: false, message: `Incorrect password for ${user.email}. Default password is: ${validPassword}` };
+      }
     }
 
     // If user was matched by targetRole rather than email

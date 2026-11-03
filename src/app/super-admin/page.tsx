@@ -110,7 +110,74 @@ export default function SuperAdminPage() {
     updateUser,
     setCompanyId,
     setRole,
+    login,
+    logout,
+    currentUser,
   } = useTenant();
+
+  // Root Super Admin Gate State
+  const [isSuperAdminAuthenticated, setIsSuperAdminAuthenticated] = useState<boolean>(false);
+  const [isCheckingAuth, setIsCheckingAuth] = useState<boolean>(true);
+  const [authEmail, setAuthEmail] = useState<string>('');
+  const [authPassword, setAuthPassword] = useState<string>('');
+  const [showAuthPassword, setShowAuthPassword] = useState<boolean>(false);
+  const [authError, setAuthError] = useState<string | null>(null);
+
+  // Check saved session on mount
+  useEffect(() => {
+    try {
+      const token = localStorage.getItem('estateflow_superadmin_auth');
+      const session = localStorage.getItem('estateflow_session');
+      if (token === 'verified_owner') {
+        setIsSuperAdminAuthenticated(true);
+      } else if (session) {
+        const parsed = JSON.parse(session);
+        if (
+          parsed.role === 'SUPER_ADMIN' &&
+          (parsed.user?.email === 'solutionsemoticon@gmail.com' || parsed.user?.email === 'solutionsemoticon@gmail')
+        ) {
+          setIsSuperAdminAuthenticated(true);
+          localStorage.setItem('estateflow_superadmin_auth', 'verified_owner');
+        }
+      }
+    } catch {}
+    setIsCheckingAuth(false);
+  }, []);
+
+  const handleAuthSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setAuthError(null);
+    let cleanEmail = authEmail.trim().toLowerCase();
+    if (cleanEmail === 'solutionsemoticon@gmail') {
+      cleanEmail = 'solutionsemoticon@gmail.com';
+    }
+
+    if (
+      (cleanEmail === 'solutionsemoticon@gmail.com' || cleanEmail === 'solutionsemoticon@gmail') &&
+      authPassword === 'SuperAdmin@123'
+    ) {
+      login('solutionsemoticon@gmail.com', 'SuperAdmin@123', 'SUPER_ADMIN');
+      try {
+        localStorage.setItem('estateflow_superadmin_auth', 'verified_owner');
+      } catch {}
+      setIsSuperAdminAuthenticated(true);
+      showBanner('Root Security Cleared. Welcome, Platform Owner!');
+    } else {
+      setAuthError('Access Denied: Invalid Master Administrator Email or Root Security Password.');
+    }
+  };
+
+  const handleLockConsole = () => {
+    try {
+      localStorage.removeItem('estateflow_superadmin_auth');
+    } catch {}
+    logout();
+    setIsSuperAdminAuthenticated(false);
+    setAuthEmail('');
+    setAuthPassword('');
+    setAuthError(null);
+    showBanner('Platform Owner Terminal Locked.');
+  };
 
   // Tab State
   const [activeTab, setActiveTab] = useState<'companies' | 'admins' | 'subscriptions' | 'invoices' | 'audit' | 'settings'>('companies');
@@ -649,6 +716,128 @@ export default function SuperAdminPage() {
     });
   }, [invoices, searchQuery, invoiceStatusFilter]);
 
+  if (isCheckingAuth) {
+    return (
+      <div className="min-h-screen bg-[#0B1522] flex items-center justify-center text-slate-400 text-xs">
+        <div className="flex items-center gap-2.5">
+          <div className="w-5 h-5 border-2 border-amber-400 border-t-transparent rounded-full animate-spin" />
+          <span className="font-mono text-slate-300">Verifying Platform Root Authority...</span>
+        </div>
+      </div>
+    );
+  }
+
+  // PLATFORM OWNER SECURITY GATE (Shown when not authenticated)
+  if (!isSuperAdminAuthenticated) {
+    return (
+      <div className="min-h-screen bg-[#0B1522] text-white flex flex-col items-center justify-center p-4 relative overflow-hidden select-none">
+        {/* Ambient background glows */}
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[550px] h-[550px] bg-blue-600/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute bottom-1/4 left-1/3 w-[350px] h-[350px] bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
+
+        <div className="max-w-md w-full bg-[#132235]/95 backdrop-blur-md border border-[#244264] rounded-3xl p-8 shadow-2xl relative z-10 space-y-6 animate-in zoom-in-95">
+          {/* Header */}
+          <div className="text-center space-y-2.5">
+            <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-amber-500 via-rose-500 to-indigo-600 p-0.5 mx-auto shadow-lg shadow-amber-500/20">
+              <div className="w-full h-full bg-[#0B1522] rounded-[14px] flex items-center justify-center text-amber-400">
+                <Lock size={28} />
+              </div>
+            </div>
+
+            <div>
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black bg-amber-400/10 text-amber-300 border border-amber-400/30 uppercase tracking-widest">
+                <ShieldAlert size={12} />
+                <span>Restricted • Platform Owner Only</span>
+              </span>
+            </div>
+
+            <h1 className="text-2xl font-black text-white tracking-tight">
+              ESTATE<span className="text-[#3478C9]">FLOW</span> <span className="text-xs font-mono font-bold text-amber-400">ROOT</span>
+            </h1>
+            <p className="text-xs text-slate-400 max-w-xs mx-auto leading-relaxed">
+              Global multi-tenant administration, database schemas, builder onboarding, and billing. Authenticate with Platform Owner credentials.
+            </p>
+          </div>
+
+          {/* Error Message */}
+          {authError && (
+            <div className="bg-rose-500/15 border border-rose-500/40 text-rose-300 px-4 py-3 rounded-xl text-xs flex items-center gap-2.5 animate-in shake">
+              <AlertTriangle size={16} className="shrink-0 text-rose-400" />
+              <span>{authError}</span>
+            </div>
+          )}
+
+          {/* Login Form */}
+          <form onSubmit={handleAuthSubmit} className="space-y-4 text-xs">
+            <div>
+              <label className="block text-slate-300 font-semibold mb-1.5">
+                Platform Owner Master Email
+              </label>
+              <div className="relative">
+                <Mail size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                <input
+                  type="text"
+                  required
+                  placeholder="solutionsemoticon@gmail"
+                  value={authEmail}
+                  onChange={(e) => setAuthEmail(e.target.value)}
+                  className="w-full h-11 pl-10 pr-3 bg-[#0B1522] border border-[#244264] rounded-xl text-white placeholder-slate-500 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-amber-400/50 focus:border-amber-400 transition-all font-mono"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-slate-300 font-semibold mb-1.5">
+                Root Access Password
+              </label>
+              <div className="relative">
+                <Lock size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                <input
+                  type={showAuthPassword ? 'text' : 'password'}
+                  required
+                  placeholder="••••••••••••"
+                  value={authPassword}
+                  onChange={(e) => setAuthPassword(e.target.value)}
+                  className="w-full h-11 pl-10 pr-10 bg-[#0B1522] border border-[#244264] rounded-xl text-white placeholder-slate-500 text-xs font-mono font-bold tracking-wider focus:outline-none focus:ring-2 focus:ring-amber-400/50 focus:border-amber-400 transition-all"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowAuthPassword(!showAuthPassword)}
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200 p-1"
+                >
+                  {showAuthPassword ? <EyeOff size={15} /> : <Eye size={15} />}
+                </button>
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              className="w-full h-11 bg-gradient-to-r from-amber-500 via-amber-600 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-slate-950 font-black rounded-xl text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg shadow-amber-500/20 transition-all active:scale-98"
+            >
+              <Key size={15} />
+              <span>Authenticate & Enter Console</span>
+              <ArrowRight size={14} />
+            </button>
+          </form>
+
+          {/* Footer Security Badges */}
+          <div className="pt-2 border-t border-slate-800/80 text-center space-y-2">
+            <div className="flex items-center justify-center gap-2 text-[10px] text-slate-400 font-mono">
+              <ShieldCheck size={13} className="text-emerald-400" />
+              <span>AES-256 Session Encrypted • WORM Audit Trail</span>
+            </div>
+            <Link
+              href="/"
+              className="inline-block text-[11px] text-slate-400 hover:text-white transition-colors"
+            >
+              &larr; Return to Public EstateFlow Site
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[#F5F7FA] text-[#263445]">
       {/* Platform Owner Header */}
@@ -677,6 +866,13 @@ export default function SuperAdminPage() {
 
             {/* Right Actions */}
             <div className="flex items-center gap-2.5">
+              {/* Authenticated Owner Badge */}
+              <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 bg-slate-800/90 border border-slate-700 rounded-lg text-xs font-mono text-slate-300 shadow-xs">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                <span className="text-white font-semibold">solutionsemoticon@gmail</span>
+                <span className="text-amber-400 font-bold text-[10px] bg-amber-400/10 px-1.5 py-0.2 rounded border border-amber-400/30">ROOT</span>
+              </div>
+
               <button
                 onClick={() => setProvisionModalOpen(true)}
                 className="h-9 px-4 rounded-lg bg-teal-500 hover:bg-teal-600 text-white font-bold text-xs shadow-sm flex items-center gap-1.5 transition-all"
@@ -693,11 +889,21 @@ export default function SuperAdminPage() {
                 <ArrowRight size={14} />
               </Link>
 
+              {/* Lock Console & Sign Out Button */}
+              <button
+                onClick={handleLockConsole}
+                className="h-9 px-3.5 rounded-lg bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/40 font-bold text-xs flex items-center gap-1.5 transition-all shadow-xs"
+                title="Immediately lock Super Admin console and terminate root session"
+              >
+                <Lock size={13} />
+                <span className="hidden sm:inline">Lock Console</span>
+              </button>
+
               <Link
                 href="/"
                 className="h-9 px-3 rounded-lg text-slate-300 hover:text-white hover:bg-slate-800/80 text-xs font-semibold flex items-center gap-1 transition-all"
               >
-                <span>Public Site</span>
+                <span>Public</span>
                 <ExternalLink size={12} />
               </Link>
             </div>

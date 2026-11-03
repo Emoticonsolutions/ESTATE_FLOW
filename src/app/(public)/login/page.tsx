@@ -134,27 +134,12 @@ function LoginContent() {
       capabilities: ['Register Client Enquiries with Ownership Tag', 'Track Attributed Bookings & Unit Allotments', 'Check Commission Slabs & Disbursal Status'],
       redirectTo: '/brokers',
     },
-    {
-      id: 'super-admin',
-      role: 'SUPER_ADMIN',
-      title: 'Platform Super Admin (SaaS)',
-      badge: 'Platform Root',
-      icon: ShieldAlert,
-      color: 'text-amber-600 border-amber-600',
-      bgHover: 'hover:bg-amber-50/70',
-      defaultEmail: 'admin@estateflow.io',
-      defaultPass: 'root123',
-      personaName: 'Rajesh Malhotra',
-      personaTitle: 'Chief Technology Officer (Platform Root)',
-      description: 'Platform owner master console: manage all registered builders, subscriptions, limits, and audit logs.',
-      capabilities: ['Manage SaaS Tenants (Prestige, Godrej, Urban Nest)', 'Configure Pricing Tiers (Starter, Pro, Enterprise)', 'Inspect Platform-Level Audit Trails'],
-      redirectTo: '/super-admin',
-    },
   ];
 
   function normalizePortal(id: string | null): string {
     if (!id) return 'admin';
     const clean = id.toLowerCase().replace(/_/g, '-');
+    if (clean === 'super-admin' || clean === 'owner') return 'admin';
     if (clean === 'company-admin' || clean === 'builder') return 'admin';
     if (clean === 'accounts-manager') return 'accounts';
     if (clean === 'channel-partner') return 'broker';
@@ -164,10 +149,14 @@ function LoginContent() {
   const [activePortalId, setActivePortalId] = useState<string>(normalizePortal(portalParam));
 
   useEffect(() => {
+    if (portalParam === 'super-admin') {
+      router.replace('/super-admin');
+      return;
+    }
     if (portalParam) {
       setActivePortalId(normalizePortal(portalParam));
     }
-  }, [portalParam]);
+  }, [portalParam, router]);
 
   // Find active portal
   const activePortal = stakeholderPortals.find((p) => p.id === activePortalId) || stakeholderPortals[0];
