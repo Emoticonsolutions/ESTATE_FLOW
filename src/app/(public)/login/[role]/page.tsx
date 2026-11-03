@@ -8,8 +8,12 @@ export default function RoleLoginPage() {
   const router = useRouter();
 
   useEffect(() => {
-    const role = params.role as string;
-    router.replace(`/login?portal=${role}`);
+    const rawRole = (params.role as string || '').toLowerCase().replace(/_/g, '-');
+    let normalized = rawRole;
+    if (rawRole === 'company-admin' || rawRole === 'builder') normalized = 'admin';
+    if (rawRole === 'accounts-manager') normalized = 'accounts';
+    if (rawRole === 'channel-partner') normalized = 'broker';
+    router.replace(`/login?portal=${normalized}`);
   }, [params, router]);
 
   return (

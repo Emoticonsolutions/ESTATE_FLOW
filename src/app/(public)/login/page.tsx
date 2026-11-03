@@ -152,7 +152,22 @@ function LoginContent() {
     },
   ];
 
-  const [activePortalId, setActivePortalId] = useState<string>(portalParam || 'admin');
+  function normalizePortal(id: string | null): string {
+    if (!id) return 'admin';
+    const clean = id.toLowerCase().replace(/_/g, '-');
+    if (clean === 'company-admin' || clean === 'builder') return 'admin';
+    if (clean === 'accounts-manager') return 'accounts';
+    if (clean === 'channel-partner') return 'broker';
+    return clean;
+  }
+
+  const [activePortalId, setActivePortalId] = useState<string>(normalizePortal(portalParam));
+
+  useEffect(() => {
+    if (portalParam) {
+      setActivePortalId(normalizePortal(portalParam));
+    }
+  }, [portalParam]);
 
   // Find active portal
   const activePortal = stakeholderPortals.find((p) => p.id === activePortalId) || stakeholderPortals[0];
