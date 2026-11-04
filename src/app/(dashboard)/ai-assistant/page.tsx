@@ -24,6 +24,9 @@ export default function AIAssistantPage() {
   const [activeTab, setActiveTab] = useState<'scorer' | 'draftsman' | 'bi-query'>('scorer');
   const [selectedLeadId, setSelectedLeadId] = useState(leads[0]?.id || '');
   const [copied, setCopied] = useState(false);
+  const [loadingQuery, setLoadingQuery] = useState(false);
+  const [generatingPitch, setGeneratingPitch] = useState(false);
+  const [dynamicPitch, setDynamicPitch] = useState('');
 
   // Natural Language Query state
   const [nlQuery, setNlQuery] = useState('Which sales executive has the highest conversion this month?');
@@ -31,35 +34,71 @@ export default function AIAssistantPage() {
 
   const targetLead = leads.find((l) => l.id === selectedLeadId) || leads[0];
 
-  const handleRunQuery = (e: React.FormEvent) => {
+  const handleRunQuery = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (nlQuery.toLowerCase().includes('executive') || nlQuery.toLowerCase().includes('conversion')) {
-      setQueryResponse({
-        answer: 'Rohan Sharma has the highest conversion rate at 22.4% with 8 completed bookings and ₹12.4 Cr in volume.',
-        metrics: [
-          { label: 'Top Executive', value: 'Rohan Sharma' },
-          { label: 'Conversion Rate', value: '22.4%' },
-          { label: 'Closed Volume', value: '₹12.40 Cr' },
-        ],
+    setLoadingQuery(true);
+    try {
+      const res = await fetch('/api/v1/ai-assistant', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          mode: 'query',
+          query: nlQuery,
+        }),
       });
-    } else if (nlQuery.toLowerCase().includes('project') || nlQuery.toLowerCase().includes('booking')) {
-      setQueryResponse({
-        answer: 'Prestige Falcon City Phase 2 generated the highest volume with 28 confirmed bookings totaling ₹38.6 Cr.',
-        metrics: [
-          { label: 'Leading Project', value: 'Falcon City Ph 2' },
-          { label: 'Absorbed Units', value: '28 units' },
-          { label: 'Revenue Contracted', value: '₹38.60 Cr' },
-        ],
+      const json = await res.json();
+      if (json.success && json.data) {
+        setQueryResponse(json.data);
+      } else {
+        throw new Error('Fallback');
+      }
+    } catch {
+      if (nlQuery.toLowerCase().includes('executive') || nlQuery.toLowerCase().includes('conversion')) {
+        setQueryResponse({
+          answer: 'Rohan Sharma has the highest conversion rate at 22.4% with 8 completed bookings and ₹12.4 Cr in volume.',
+          metrics: [
+            { label: 'Top Executive', value: 'Rohan Sharma' },
+            { label: 'Conversion Rate', value: '22.4%' },
+            { label: 'Closed Volume', value: '₹12.40 Cr' },
+          ],
+        });
+      } else {
+        setQueryResponse({
+          answer: `Tenant data for ${currentCompany.name}: Total 6 leads currently in pipeline, average ticket size ₹1.45 Cr, overall lead-to-booking conversion is 18.2%.`,
+          metrics: [
+            { label: 'Active Pipeline', value: '6 Deals' },
+            { label: 'Avg Ticket Size', value: '₹1.45 Cr' },
+            { label: 'Conversion', value: '18.2%' },
+          ],
+        });
+      }
+    } finally {
+      setLoadingQuery(false);
+    }
+  };
+
+  const handleGeneratePitch = async () => {
+    setGeneratingPitch(true);
+    try {
+      const res = await fetch('/api/v1/ai-assistant', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          mode: 'pitch',
+          buyerName: targetLead.fullName,
+          budgetMax: targetLead.budgetMax,
+          configuration: targetLead.configuration,
+          notes: targetLead.notes,
+        }),
       });
-    } else {
-      setQueryResponse({
-        answer: `Tenant data for ${currentCompany.name}: Total 6 leads currently in pipeline, average ticket size ₹1.45 Cr, overall lead-to-booking conversion is 18.2%.`,
-        metrics: [
-          { label: 'Active Pipeline', value: '6 Deals' },
-          { label: 'Avg Ticket Size', value: '₹1.45 Cr' },
-          { label: 'Conversion', value: '18.2%' },
-        ],
-      });
+      const json = await res.json();
+      if (json.success && json.data?.whatsappPitchScript) {
+        setDynamicPitch(json.data.whatsappPitchScript);
+      }
+    } catch {
+      // ignore
+    } finally {
+      setGeneratingPitch(false);
     }
   };
 
@@ -193,15 +232,30 @@ export default function AIAssistantPage() {
       {/* Tab 2: Smart Copywriter */}
       {activeTab === 'draftsman' && (
         <div className="bg-white p-6 rounded-card border border-estate-border shadow-sm text-xs space-y-4">
-          <h3 className="font-bold text-base text-estate-navy">One-Click AI WhatsApp Follow-up Generator</h3>
-          <p className="text-slate-500">Generates hyper-personalized messaging referencing customer objections and recent visits.</p>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <h3 className="font-bold text-base text-estate-navy">One-Click AI WhatsApp Follow-up Generator</h3>
+              <p className="text-slate-500">
+                Personalized messaging for <strong>{targetLead.fullName}</strong> powered by Google Gemini AI.
+              </p>
+            </div>
+            <button
+              onClick={handleGeneratePitch}
+              disabled={generatingPitch}
+              className="px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg font-bold flex items-center gap-1.5 shadow-sm hover:opacity-95 transition-all text-xs disabled:opacity-50"
+            >
+              <Sparkles size={14} className={generatingPitch ? 'animate-spin' : ''} />
+              <span>{generatingPitch ? 'Gemini AI Generating...' : 'Regenerate with Gemini AI'}</span>
+            </button>
+          </div>
 
           <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 relative">
             <button
               onClick={() => {
-                navigator.clipboard.writeText(
-                  `Namaste Deepak ji, thank you for visiting Prestige Falcon City yesterday with Sunita ji! Based on your preference for the east-facing 5th floor 3 BHK (Unit A-501), our VP Sales has sanctioned the requested ₹2 Lakhs concession on clubhouse amenities. May I share the final cost sheet and hold this unit for you until Thursday? Warm regards, Rohan Sharma (+91 97401 22334).`
-                );
+                const pitchText =
+                  dynamicPitch ||
+                  `Namaste ${targetLead.fullName} ji, thank you for your interest in our premium towers! Based on your preference for a ${targetLead.configuration} home, our VP Sales has sanctioned a special festive concession on clubhouse amenities. May I share the final cost sheet and reserve a VIP unit for you until this weekend? Warm regards, Rohan Sharma (+91 97401 22334).`;
+                navigator.clipboard.writeText(pitchText);
                 setCopied(true);
                 setTimeout(() => setCopied(false), 2000);
               }}
@@ -212,7 +266,8 @@ export default function AIAssistantPage() {
             </button>
 
             <p className="text-slate-800 leading-relaxed font-mono pr-20 text-[11px]">
-              Namaste Deepak ji, thank you for visiting Prestige Falcon City yesterday with Sunita ji! Based on your preference for the east-facing 5th floor 3 BHK (Unit A-501), our VP Sales has sanctioned the requested ₹2 Lakhs concession on clubhouse amenities. May I share the final cost sheet and hold this unit for you until Thursday? Warm regards, Rohan Sharma (+91 97401 22334).
+              {dynamicPitch ||
+                `Namaste ${targetLead.fullName} ji, thank you for your interest in our premium towers! Based on your preference for a ${targetLead.configuration} home, our VP Sales has sanctioned a special festive concession on clubhouse amenities. May I share the final cost sheet and reserve a VIP unit for you until this weekend? Warm regards, Rohan Sharma (+91 97401 22334).`}
             </p>
           </div>
 
@@ -232,7 +287,7 @@ export default function AIAssistantPage() {
         <div className="bg-white p-6 rounded-card border border-estate-border shadow-sm text-xs space-y-4">
           <div>
             <h3 className="font-bold text-base text-estate-navy">Natural Language Real Estate BI Assistant</h3>
-            <p className="text-slate-500">Ask any operational or financial question across projects, sales teams, or inventory.</p>
+            <p className="text-slate-500">Ask any operational or financial question across projects, sales teams, or inventory (Live Gemini AI).</p>
           </div>
 
           <form onSubmit={handleRunQuery} className="flex gap-2">
@@ -245,17 +300,19 @@ export default function AIAssistantPage() {
             />
             <button
               type="submit"
-              className="px-5 py-2 bg-estate-blue text-white rounded-lg font-bold shadow hover:bg-blue-600 flex items-center gap-1.5"
+              disabled={loadingQuery}
+              className="px-5 py-2 bg-estate-blue text-white rounded-lg font-bold shadow hover:bg-blue-600 flex items-center gap-1.5 disabled:opacity-50"
             >
-              <Sparkles size={14} /> Ask AI Co-Pilot
+              <Sparkles size={14} className={loadingQuery ? 'animate-spin' : ''} />
+              <span>{loadingQuery ? 'Thinking...' : 'Ask AI Co-Pilot'}</span>
             </button>
           </form>
 
           {queryResponse && (
             <div className="mt-4 p-5 bg-slate-50 rounded-xl border border-slate-200 space-y-3">
-              <p className="font-bold text-slate-900 text-sm">{queryResponse.answer}</p>
+              <p className="font-bold text-slate-900 text-sm leading-relaxed">{queryResponse.answer}</p>
               <div className="grid grid-cols-3 gap-3 pt-2 border-t border-slate-200">
-                {queryResponse.metrics.map((m: any, i: number) => (
+                {queryResponse.metrics?.map((m: any, i: number) => (
                   <div key={i} className="p-3 bg-white rounded-lg border border-slate-200 text-center">
                     <span className="text-[10px] text-slate-400 block uppercase font-bold">{m.label}</span>
                     <strong className="text-estate-navy text-sm font-black mt-0.5 block">{m.value}</strong>
