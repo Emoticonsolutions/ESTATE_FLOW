@@ -25,7 +25,7 @@ export function PublicNavbar() {
     name: '',
     phone: '',
     company: '',
-    city: 'Bangalore',
+    city: 'Metro City',
     slot: 'Tomorrow, 11:00 AM',
   });
 
@@ -51,7 +51,7 @@ export function PublicNavbar() {
     setTimeout(() => {
       setDemoSubmitted(false);
       setDemoModalOpen(false);
-      setDemoForm({ name: '', phone: '', company: '', city: 'Bangalore', slot: 'Tomorrow, 11:00 AM' });
+      setDemoForm({ name: '', phone: '', company: '', city: 'Metro City', slot: 'Tomorrow, 11:00 AM' });
     }, 2500);
   };
 
@@ -197,7 +197,7 @@ export function PublicNavbar() {
                 </div>
                 <h3 className="text-lg font-bold text-slate-900">Demo Request Submitted!</h3>
                 <p className="text-xs text-slate-600 mt-1.5 leading-relaxed">
-                  Thank you! Our enterprise real estate specialist will contact you on <strong>{demoForm.phone || '+91 98000 00000'}</strong> to confirm your slot: <strong>{demoForm.slot}</strong>.
+                  Thank you! Our enterprise real estate specialist will contact you on <strong>{demoForm.phone || 'your contact number'}</strong> to confirm your slot: <strong>{demoForm.slot}</strong>.
                 </p>
                 <span className="inline-block mt-4 text-[11px] text-slate-400 font-mono">
                   Closing in 2 seconds...
@@ -236,7 +236,7 @@ export function PublicNavbar() {
                       <Phone size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                       <input
                         type="tel"
-                        placeholder="+91 98765 43210"
+                        placeholder="e.g. +1 (555) 000-0000"
                         required
                         value={demoForm.phone}
                         onChange={(e) => setDemoForm({ ...demoForm, phone: e.target.value })}
@@ -261,7 +261,7 @@ export function PublicNavbar() {
                       <label className="block text-xs font-semibold text-slate-700 mb-1">City</label>
                       <input
                         type="text"
-                        placeholder="Bangalore / Mumbai"
+                        placeholder="e.g. Metro City"
                         required
                         value={demoForm.city}
                         onChange={(e) => setDemoForm({ ...demoForm, city: e.target.value })}

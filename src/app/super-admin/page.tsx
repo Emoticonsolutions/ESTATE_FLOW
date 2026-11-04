@@ -232,8 +232,8 @@ export default function SuperAdminPage() {
     {
       id: 'plan-starter',
       name: 'Starter',
-      priceMonthly: 14999,
-      priceAnnualMonthly: 11999,
+      priceMonthly: 199,
+      priceAnnualMonthly: 159,
       userLimit: 5,
       projectLimit: 2,
       storageGB: 25,
@@ -252,8 +252,8 @@ export default function SuperAdminPage() {
     {
       id: 'plan-pro',
       name: 'Professional',
-      priceMonthly: 34999,
-      priceAnnualMonthly: 27999,
+      priceMonthly: 499,
+      priceAnnualMonthly: 399,
       userLimit: 20,
       projectLimit: 10,
       storageGB: 100,
@@ -264,7 +264,7 @@ export default function SuperAdminPage() {
       features: [
         '20 User Seats included',
         '10 Active Projects & Towers',
-        'Meta WhatsApp Cloud API Integration',
+        '1-Click WhatsApp & Webhook Integration',
         'Round-Robin Lead Assignment',
         'Milestone Payment Schedules & Stamped Receipts',
         'Broker Commission Payout Approval Flow',
@@ -273,8 +273,8 @@ export default function SuperAdminPage() {
     {
       id: 'plan-enterprise',
       name: 'Enterprise',
-      priceMonthly: 89999,
-      priceAnnualMonthly: 71999,
+      priceMonthly: 999,
+      priceAnnualMonthly: 799,
       userLimit: 50,
       projectLimit: 25,
       storageGB: 1000,
@@ -302,14 +302,14 @@ export default function SuperAdminPage() {
       companyName: 'Prestige Estates Projects Ltd',
       planName: 'Enterprise',
       billingPeriod: 'Nov 01 - Nov 30, 2026',
-      baseAmount: 89999,
-      gstAmount: 16199.82,
-      totalAmount: 106198.82,
+      baseAmount: 999,
+      gstAmount: 0,
+      totalAmount: 999,
       dueDate: '2026-11-05',
       paidDate: '2026-11-01',
       status: 'Paid',
-      paymentMethod: 'Razorpay Auto-Debit (Corporate HDFC)',
-      paymentRef: 'rzp_pay_99812A980',
+      paymentMethod: 'Corporate Wire (USD)',
+      paymentRef: 'wire_ref_99812A980',
       cin: 'L45200KA1997PLC022365',
       reraNumber: 'PRM/KA/RERA/1251/310/PR/170915/000123',
       gstin: '29AABCP1234F1Z1',
@@ -321,14 +321,14 @@ export default function SuperAdminPage() {
       companyName: 'Godrej Skyline Developers',
       planName: 'Professional',
       billingPeriod: 'Nov 01 - Nov 30, 2026',
-      baseAmount: 34999,
-      gstAmount: 6299.82,
-      totalAmount: 41298.82,
+      baseAmount: 499,
+      gstAmount: 0,
+      totalAmount: 499,
       dueDate: '2026-11-10',
       paidDate: '2026-11-02',
       status: 'Paid',
-      paymentMethod: 'Bank Transfer (NEFT)',
-      paymentRef: 'NEFT-ICIC-20261102-881',
+      paymentMethod: 'Bank Wire Transfer',
+      paymentRef: 'WIRE-ICIC-20261102-881',
       cin: 'L74120MH1985PLC035308',
       reraNumber: 'P51800000832',
       gstin: '27AAACG0532N1Z4',
@@ -340,12 +340,12 @@ export default function SuperAdminPage() {
       companyName: 'Urban Nest Properties',
       planName: 'Starter',
       billingPeriod: 'Nov 01 - Nov 30, 2026',
-      baseAmount: 14999,
-      gstAmount: 2699.82,
-      totalAmount: 17698.82,
+      baseAmount: 199,
+      gstAmount: 0,
+      totalAmount: 199,
       dueDate: '2026-11-10',
       status: 'Pending',
-      paymentMethod: 'Razorpay Mandate (Pending Authorization)',
+      paymentMethod: 'Credit Card / Wire (Pending Authorization)',
       cin: 'U45200DL2018PTC328901',
       reraNumber: 'RC/REP/HARERA/GGM/2018/14',
       gstin: '07AABCU9876D1Z2',
@@ -357,12 +357,12 @@ export default function SuperAdminPage() {
       companyName: 'Sobha Luxury Heights',
       planName: 'Professional',
       billingPeriod: 'Oct 01 - Oct 31, 2026',
-      baseAmount: 34999,
-      gstAmount: 6299.82,
-      totalAmount: 41298.82,
+      baseAmount: 499,
+      gstAmount: 0,
+      totalAmount: 499,
       dueDate: '2026-10-25',
       status: 'Overdue',
-      paymentMethod: 'Corporate Cheque (Awaiting Clearance)',
+      paymentMethod: 'Corporate Wire (Awaiting Clearance)',
       cin: 'L45201KA1995PLC018475',
       reraNumber: 'P02400001928',
       gstin: '36AABCS1234K1Z8',
@@ -374,9 +374,9 @@ export default function SuperAdminPage() {
       companyName: 'Prestige Estates Projects Ltd',
       planName: 'Enterprise',
       billingPeriod: 'Oct 01 - Oct 31, 2026',
-      baseAmount: 89999,
-      gstAmount: 16199.82,
-      totalAmount: 106198.82,
+      baseAmount: 999,
+      gstAmount: 0,
+      totalAmount: 999,
       dueDate: '2026-10-05',
       paidDate: '2026-10-03',
       status: 'Paid',
@@ -465,7 +465,7 @@ export default function SuperAdminPage() {
 
   // KPI Calculations
   const metrics = useMemo(() => {
-    const totalMRR = allCompanies.reduce((acc, c) => acc + (c.status === 'Active' ? (c.monthlyFee || 34999) : 0), 0);
+    const totalMRR = allCompanies.reduce((acc, c) => acc + (c.status === 'Active' ? (c.monthlyFee || 499) : 0), 0);
     const totalARR = totalMRR * 12;
     const pendingAmount = invoices
       .filter((i) => i.status === 'Pending' || i.status === 'Overdue')
@@ -525,7 +525,7 @@ export default function SuperAdminPage() {
     const rawCode = (provisionForm.code || provisionForm.companyName.slice(0, 4)).toUpperCase().replace(/[^A-Z0-9]/g, '');
     const newCompanyId = `comp-${rawCode.toLowerCase()}`;
     const monthlyFee =
-      provisionForm.plan === 'Starter' ? 14999 : provisionForm.plan === 'Enterprise' ? 89999 : 34999;
+      provisionForm.plan === 'Starter' ? 199 : provisionForm.plan === 'Enterprise' ? 999 : 499;
 
     const cinNumber = provisionForm.registrationNumber || provisionForm.cin || `U45200KA2024PTC${Math.floor(100000 + Math.random() * 900000)}`;
     const reraId = provisionForm.reraNumber || `PRM/KA/RERA/1251/310/PR/${Math.floor(100000 + Math.random() * 900000)}`;
@@ -693,7 +693,7 @@ export default function SuperAdminPage() {
     if (!selectedCompanyForSub) return;
 
     const plan = selectedCompanyForSub.plan;
-    const monthlyFee = plan === 'Starter' ? 14999 : plan === 'Enterprise' ? 89999 : 34999;
+    const monthlyFee = plan === 'Starter' ? 199 : plan === 'Enterprise' ? 999 : 499;
 
     updateCompany(selectedCompanyForSub.id, {
       plan,
@@ -958,10 +958,10 @@ export default function SuperAdminPage() {
               </div>
             </div>
             <p className="text-2xl font-black text-[#17324D] mt-2">
-              ₹{(metrics.totalMRR / 100000).toFixed(2)} Lakhs
+              ${metrics.totalMRR.toLocaleString('en-US')}
             </p>
             <span className="text-[11px] text-emerald-600 font-bold mt-1 block">
-              +18.4% MoM platform expansion
+              +18.4% MoM platform expansion (${(metrics.totalMRR * 12).toLocaleString('en-US')} ARR)
             </span>
           </div>
 
@@ -973,7 +973,7 @@ export default function SuperAdminPage() {
               </div>
             </div>
             <p className="text-2xl font-black text-amber-600 mt-2">
-              ₹{metrics.pendingAmount.toLocaleString('en-IN')}
+              ${metrics.pendingAmount.toLocaleString('en-US')}
             </p>
             <span className="text-[11px] text-slate-500 mt-1 block">
               {invoices.filter((i) => i.status !== 'Paid').length} Accounts awaiting clearance
@@ -1195,7 +1195,7 @@ export default function SuperAdminPage() {
                             {c.plan} Tier
                           </span>
                           <span className="text-[11px] text-slate-600 font-bold block mt-0.5">
-                            ₹{(c.monthlyFee || (c.plan === 'Enterprise' ? 89999 : c.plan === 'Starter' ? 14999 : 34999)).toLocaleString('en-IN')}/mo
+                            ${(c.monthlyFee || (c.plan === 'Enterprise' ? 999 : c.plan === 'Starter' ? 199 : 499)).toLocaleString('en-US')}/mo
                           </span>
                         </div>
                       </td>
@@ -1428,7 +1428,7 @@ export default function SuperAdminPage() {
                   </p>
                 </div>
                 <span className="text-xs font-bold text-teal-600 bg-teal-50 border border-teal-200 px-3 py-1 rounded-lg">
-                  Currency: INR (₹) • Tax: 18% GST Applicable
+                  Currency: USD ($) • Flat Platform Pricing
                 </span>
               </div>
 
@@ -1456,7 +1456,7 @@ export default function SuperAdminPage() {
 
                         <div className="mt-3 mb-2">
                           <span className="text-3xl font-black text-[#17324D]">
-                            ₹{p.priceMonthly.toLocaleString('en-IN')}
+                            ${p.priceMonthly.toLocaleString('en-US')}
                           </span>
                           <span className="text-xs text-slate-500 font-medium"> / month</span>
                         </div>
@@ -2025,9 +2025,9 @@ export default function SuperAdminPage() {
                     }}
                     className="w-full px-2.5 py-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-900 font-semibold"
                   >
-                    <option value="Starter">Starter Tier (₹14,999/mo)</option>
-                    <option value="Professional">Professional Tier (₹34,999/mo)</option>
-                    <option value="Enterprise">Enterprise Tier (₹89,999/mo)</option>
+                    <option value="Starter">Starter Tier ($199/mo)</option>
+                    <option value="Professional">Professional Tier ($499/mo)</option>
+                    <option value="Enterprise">Enterprise Tier ($999/mo)</option>
                   </select>
                 </div>
                 <div>
@@ -2365,14 +2365,14 @@ export default function SuperAdminPage() {
                       plan,
                       userLimit: plan === 'Starter' ? 5 : plan === 'Enterprise' ? 50 : 20,
                       projectLimit: plan === 'Starter' ? 2 : plan === 'Enterprise' ? 25 : 10,
-                      monthlyFee: plan === 'Starter' ? 14999 : plan === 'Enterprise' ? 89999 : 34999,
+                      monthlyFee: plan === 'Starter' ? 199 : plan === 'Enterprise' ? 999 : 499,
                     });
                   }}
                   className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-900 font-bold"
                 >
-                  <option value="Starter">Starter (₹14,999/mo • 5 Seats)</option>
-                  <option value="Professional">Professional (₹34,999/mo • 20 Seats)</option>
-                  <option value="Enterprise">Enterprise (₹89,999/mo • 50+ Seats)</option>
+                  <option value="Starter">Starter ($199/mo • 5 Seats)</option>
+                  <option value="Professional">Professional ($499/mo • 20 Seats)</option>
+                  <option value="Enterprise">Enterprise ($999/mo • 50+ Seats)</option>
                 </select>
               </div>
 
@@ -2400,7 +2400,7 @@ export default function SuperAdminPage() {
               <div className="p-3 bg-purple-50 rounded-xl border border-purple-200 flex items-center justify-between">
                 <span className="text-purple-900 font-semibold">New Monthly Billing Rate:</span>
                 <span className="font-mono font-black text-purple-900 text-sm">
-                  ₹{(selectedCompanyForSub.monthlyFee || 34999).toLocaleString('en-IN')}/mo
+                  ${(selectedCompanyForSub.monthlyFee || 499).toLocaleString('en-US')}/mo
                 </span>
               </div>
 
@@ -2507,7 +2507,7 @@ export default function SuperAdminPage() {
                   <div className="bg-white p-2 rounded-lg border border-slate-200">
                     <span className="text-[10px] text-slate-400 block">Monthly Rate</span>
                     <span className="font-bold text-emerald-700 text-xs">
-                      ₹{(selectedCompanyDetails.monthlyFee || 34999).toLocaleString('en-IN')}
+                      ${(selectedCompanyDetails.monthlyFee || 499).toLocaleString('en-US')}
                     </span>
                   </div>
                 </div>
@@ -2717,31 +2717,15 @@ export default function SuperAdminPage() {
                     </td>
                     <td className="py-3 px-3 font-mono text-slate-500">998314</td>
                     <td className="py-3 px-3 text-right font-mono font-bold">
-                      ₹{selectedInvoice.baseAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-                    </td>
-                  </tr>
-                  <tr className="bg-slate-50/50">
-                    <td colSpan={2} className="py-2 px-3 text-right text-slate-600 font-semibold">
-                      CGST @ 9%
-                    </td>
-                    <td className="py-2 px-3 text-right font-mono text-slate-700">
-                      ₹{(selectedInvoice.gstAmount / 2).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-                    </td>
-                  </tr>
-                  <tr className="bg-slate-50/50">
-                    <td colSpan={2} className="py-2 px-3 text-right text-slate-600 font-semibold">
-                      SGST @ 9%
-                    </td>
-                    <td className="py-2 px-3 text-right font-mono text-slate-700">
-                      ₹{(selectedInvoice.gstAmount / 2).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                      ${selectedInvoice.baseAmount.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                     </td>
                   </tr>
                   <tr className="bg-slate-100/80 font-bold text-slate-900">
                     <td colSpan={2} className="py-3 px-3 text-right text-sm">
-                      Total Invoice Value (INR):
+                      Total Invoice Value (USD):
                     </td>
                     <td className="py-3 px-3 text-right font-mono text-sm text-[#17324D]">
-                      ₹{selectedInvoice.totalAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                      ${selectedInvoice.totalAmount.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                     </td>
                   </tr>
                 </tbody>
