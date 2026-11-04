@@ -14,6 +14,7 @@ import {
   Building,
   Phone,
   User,
+  Sparkles,
 } from 'lucide-react';
 
 export function PublicNavbar() {
@@ -31,7 +32,7 @@ export function PublicNavbar() {
 
   const navLinks = [
     { name: 'Home', href: '/' },
-    { name: 'Demo Video', href: '/#demo-video', icon: Play, highlight: true },
+    { name: 'Live Platform Tour', href: '/#live-demo', icon: Sparkles, highlight: true },
     { name: 'Stakeholders', href: '/#stakeholders' },
     { name: 'Features', href: '/features' },
     { name: 'Pricing', href: '/pricing' },
