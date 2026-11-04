@@ -162,32 +162,32 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* SaaS Platform Showcase Hero: Real UI Frame with Real Estate Photography */}
+          {/* SaaS Platform Showcase Hero: Modern Light SaaS Cockpit */}
           <div className="mt-14 relative max-w-5xl mx-auto">
             {/* Background Glow */}
-            <div className="absolute -inset-1.5 bg-gradient-to-r from-teal-500 via-[#3478C9] to-blue-600 rounded-3xl blur-xl opacity-20 pointer-events-none" />
+            <div className="absolute -inset-1.5 bg-gradient-to-r from-teal-500 via-[#3478C9] to-blue-600 rounded-3xl blur-xl opacity-15 pointer-events-none" />
 
-            {/* Main Window */}
-            <div className="relative rounded-3xl bg-slate-900 border border-slate-700 shadow-2xl overflow-hidden">
-              {/* macOS Style Bar */}
-              <div className="bg-slate-950 px-4 py-3 border-b border-slate-800 flex items-center justify-between">
+            {/* Main Light Cockpit Window */}
+            <div className="relative rounded-3xl bg-white border border-slate-200 shadow-2xl overflow-hidden ring-1 ring-slate-900/5">
+              {/* macOS Style Header Bar */}
+              <div className="bg-slate-50 px-4 py-3 border-b border-slate-200 flex items-center justify-between">
                 <div className="flex items-center space-x-2">
-                  <span className="w-3 h-3 rounded-full bg-rose-500 inline-block" />
-                  <span className="w-3 h-3 rounded-full bg-amber-500 inline-block" />
-                  <span className="w-3 h-3 rounded-full bg-emerald-500 inline-block" />
-                  <span className="ml-3 text-[11px] font-mono text-slate-400 hidden sm:inline">
-                    estateflow-eta.vercel.app/dashboard
+                  <span className="w-3 h-3 rounded-full bg-rose-400 inline-block" />
+                  <span className="w-3 h-3 rounded-full bg-amber-400 inline-block" />
+                  <span className="w-3 h-3 rounded-full bg-emerald-400 inline-block" />
+                  <span className="ml-3 text-xs font-mono text-slate-500 font-medium hidden sm:inline">
+                    estateflow-eta.vercel.app/dashboard • Prestige Estates Developer Console
                   </span>
                 </div>
 
                 <div className="flex items-center gap-2">
-                  <span className="text-[10px] font-bold text-teal-400 bg-teal-950 border border-teal-800 px-2.5 py-0.5 rounded-full flex items-center gap-1.5">
-                    <span className="w-1.5 h-1.5 rounded-full bg-teal-400 animate-pulse" />
-                    <span>Live Multi-Tenant CRM</span>
+                  <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                    <span>Live Multi-Tenant ERP</span>
                   </span>
                   <Link
                     href="/login"
-                    className="text-xs text-white bg-[#3478C9] hover:bg-blue-600 px-3 py-1 rounded-lg font-bold flex items-center gap-1 transition-all"
+                    className="text-xs text-white bg-[#3478C9] hover:bg-blue-600 px-3 py-1 rounded-lg font-bold flex items-center gap-1 transition-all shadow-xs"
                   >
                     <span>Test Drive</span>
                     <ArrowRight size={12} />
@@ -195,68 +195,152 @@ export default function HomePage() {
                 </div>
               </div>
 
-              {/* Showcase Image & UI Layout */}
-              <div className="grid grid-cols-1 lg:grid-cols-12 bg-slate-950">
-                {/* Left Col: Real High-Rise Architecture Photo */}
-                <div className="lg:col-span-5 relative h-72 lg:h-auto overflow-hidden">
-                  <img
-                    src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1000&q=80"
-                    alt="Modern Real Estate Architectural Skyscraper"
-                    className="w-full h-full object-cover"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent flex flex-col justify-end p-5">
-                    <span className="text-[10px] font-bold text-teal-400 uppercase tracking-wider bg-slate-900/90 px-2.5 py-1 rounded-md w-fit border border-slate-700">
-                      Flagship Project
-                    </span>
-                    <h4 className="text-white font-black text-lg mt-1">Azure Heights • Tower B</h4>
-                    <p className="text-xs text-slate-300">Luxury 2BHK, 3BHK & Sky Penthouses</p>
+              {/* Inner Application Layout */}
+              <div className="p-5 sm:p-7 space-y-5 text-left">
+                {/* Top Metric KPI Row */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3.5">
+                  <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/90 shadow-2xs">
+                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Tower Inventory</span>
+                    <p className="text-xl sm:text-2xl font-black text-slate-900 mt-0.5">140 Units</p>
+                    <div className="mt-1 flex items-center gap-1.5 text-xs text-emerald-700 font-bold">
+                      <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
+                      <span>24 Available for Sale</span>
+                    </div>
+                  </div>
+
+                  <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/90 shadow-2xs">
+                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">72-Hour Anti-Conflict</span>
+                    <p className="text-xl sm:text-2xl font-black text-amber-600 mt-0.5">4 Locked</p>
+                    <div className="mt-1 flex items-center gap-1.5 text-xs text-slate-600">
+                      <span>Zero Double-Booking</span>
+                    </div>
+                  </div>
+
+                  <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/90 shadow-2xs">
+                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Escrow Bank Realization</span>
+                    <p className="text-xl sm:text-2xl font-black text-teal-700 mt-0.5">$14.2M</p>
+                    <div className="mt-1 flex items-center gap-1.5 text-xs text-slate-600">
+                      <span>Direct RTGS / Cheques</span>
+                    </div>
+                  </div>
+
+                  <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/90 shadow-2xs">
+                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Inbound Lead Pipeline</span>
+                    <p className="text-xl sm:text-2xl font-black text-[#3478C9] mt-0.5">184 Leads</p>
+                    <div className="mt-1 flex items-center gap-1.5 text-xs text-blue-700 font-bold">
+                      <span>94/100 AI Intent Score</span>
+                    </div>
                   </div>
                 </div>
 
-                {/* Right Col: Live EstateFlow Cockpit */}
-                <div className="lg:col-span-7 p-6 sm:p-8 flex flex-col justify-between space-y-4">
-                  <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-                    <div>
-                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Enterprise Workspace</span>
-                      <h4 className="text-white font-bold text-base">Prestige Estates Developer Console</h4>
-                    </div>
-                    <span className="text-xs font-mono text-emerald-400 bg-emerald-950/80 px-2.5 py-1 rounded-lg border border-emerald-800">
-                      Active Multi-Tenant Mode
-                    </span>
-                  </div>
-
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                    <div className="p-3 bg-slate-900/90 rounded-xl border border-slate-800">
-                      <span className="text-[10px] text-slate-400 block uppercase font-semibold">Total Inventory</span>
-                      <strong className="text-white text-sm font-mono">140 Units</strong>
-                      <span className="text-[10px] text-emerald-400 block mt-0.5">24 Available for Sale</span>
-                    </div>
-
-                    <div className="p-3 bg-slate-900/90 rounded-xl border border-slate-800">
-                      <span className="text-[10px] text-slate-400 block uppercase font-semibold">Active Holds</span>
-                      <strong className="text-amber-400 text-sm font-mono">4 Locked (72h)</strong>
-                      <span className="text-[10px] text-slate-400 block mt-0.5">Zero Double-Booking</span>
-                    </div>
-
-                    <div className="p-3 bg-slate-900/90 rounded-xl border border-slate-800 col-span-2 sm:col-span-1">
-                      <span className="text-[10px] text-slate-400 block uppercase font-semibold">Contracted Value</span>
-                      <strong className="text-teal-400 text-sm font-mono">$14.2M</strong>
-                      <span className="text-[10px] text-slate-400 block mt-0.5">Escrow Direct Ledgers</span>
-                    </div>
-                  </div>
-
-                  {/* Live Transaction Strip */}
-                  <div className="p-3.5 bg-slate-900/80 rounded-xl border border-slate-800 space-y-2">
-                    <div className="flex items-center justify-between text-xs">
-                      <div className="flex items-center gap-2">
-                        <span className="w-2 h-2 rounded-full bg-emerald-400" />
-                        <span className="text-white font-semibold">Latest Realization: Unit 1402</span>
+                {/* Main Interactive Split View */}
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+                  {/* Left: Architectural Stacking Plan (7 Cols) */}
+                  <div className="lg:col-span-7 bg-slate-50 rounded-2xl p-4 sm:p-5 border border-slate-200">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 mb-3.5 border-b border-slate-200 gap-2">
+                      <div>
+                        <h4 className="font-bold text-slate-900 text-sm">Azure Heights • Tower B Architectural Stacking</h4>
+                        <p className="text-[11px] text-slate-500 mt-0.5">Floor-by-floor real-time unit status & 72-hour transactional locking</p>
                       </div>
-                      <span className="font-mono text-teal-400 font-bold">$51,000 RTGS Realized</span>
+                      <div className="flex items-center gap-2.5 text-[11px] font-semibold text-slate-600">
+                        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-emerald-500" /> Available</span>
+                        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-amber-500" /> 72h Hold</span>
+                        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-blue-600" /> Booked</span>
+                      </div>
                     </div>
-                    <p className="text-[11px] text-slate-400">
-                      Cheque/UTR reference verified and deposited to RERA Escrow. Official stamped receipt #RCP-9021 issued.
-                    </p>
+
+                    {/* Floor Units Grid */}
+                    <div className="space-y-2.5">
+                      {/* Floor 14 */}
+                      <div className="bg-white p-3 rounded-xl border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2 shadow-2xs">
+                        <div className="flex items-center gap-2">
+                          <span className="w-6 h-6 rounded bg-slate-100 text-slate-700 font-mono text-xs font-bold flex items-center justify-center shrink-0">14F</span>
+                          <span className="text-xs font-bold text-slate-800">Level 14 Penthouse & Corner</span>
+                        </div>
+                        <div className="grid grid-cols-4 gap-1.5 sm:gap-2">
+                          <span className="px-2 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-lg text-xs font-bold text-center">1401 • Avail</span>
+                          <span className="px-2 py-1 bg-amber-100 text-amber-900 border border-amber-300 rounded-lg text-xs font-bold text-center shadow-2xs ring-1 ring-amber-400">1402 • Locked</span>
+                          <span className="px-2 py-1 bg-blue-50 text-blue-700 border border-blue-200 rounded-lg text-xs font-bold text-center">1403 • Booked</span>
+                          <span className="px-2 py-1 bg-slate-100 text-slate-400 rounded-lg text-xs font-bold text-center">1404 • Sold</span>
+                        </div>
+                      </div>
+
+                      {/* Floor 12 */}
+                      <div className="bg-white p-3 rounded-xl border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2 shadow-2xs">
+                        <div className="flex items-center gap-2">
+                          <span className="w-6 h-6 rounded bg-slate-100 text-slate-700 font-mono text-xs font-bold flex items-center justify-center shrink-0">12F</span>
+                          <span className="text-xs font-bold text-slate-800">Level 12 Executive Suites</span>
+                        </div>
+                        <div className="grid grid-cols-4 gap-1.5 sm:gap-2">
+                          <span className="px-2 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-lg text-xs font-bold text-center">1201 • Avail</span>
+                          <span className="px-2 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-lg text-xs font-bold text-center">1202 • Avail</span>
+                          <span className="px-2 py-1 bg-blue-50 text-blue-700 border border-blue-200 rounded-lg text-xs font-bold text-center">1203 • Booked</span>
+                          <span className="px-2 py-1 bg-slate-100 text-slate-400 rounded-lg text-xs font-bold text-center">1204 • Sold</span>
+                        </div>
+                      </div>
+
+                      {/* Floor 10 */}
+                      <div className="bg-white p-3 rounded-xl border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2 shadow-2xs">
+                        <div className="flex items-center gap-2">
+                          <span className="w-6 h-6 rounded bg-slate-100 text-slate-700 font-mono text-xs font-bold flex items-center justify-center shrink-0">10F</span>
+                          <span className="text-xs font-bold text-slate-800">Level 10 Deluxe 3BHK</span>
+                        </div>
+                        <div className="grid grid-cols-4 gap-1.5 sm:gap-2">
+                          <span className="px-2 py-1 bg-blue-50 text-blue-700 border border-blue-200 rounded-lg text-xs font-bold text-center">1001 • Booked</span>
+                          <span className="px-2 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-lg text-xs font-bold text-center">1002 • Avail</span>
+                          <span className="px-2 py-1 bg-slate-100 text-slate-400 rounded-lg text-xs font-bold text-center">1003 • Sold</span>
+                          <span className="px-2 py-1 bg-slate-100 text-slate-400 rounded-lg text-xs font-bold text-center">1004 • Sold</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Right: Real-Time Audit Feed & WhatsApp Dispatch (5 Cols) */}
+                  <div className="lg:col-span-5 space-y-3">
+                    {/* Active Hold Card */}
+                    <div className="p-3.5 bg-amber-50/90 rounded-2xl border border-amber-200 text-amber-950">
+                      <div className="flex items-center justify-between text-xs font-bold mb-1">
+                        <span className="flex items-center gap-1.5 text-amber-800">
+                          <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+                          <span>72-Hour Hold Placed</span>
+                        </span>
+                        <span className="font-mono text-amber-700 font-bold">48h 12m Left</span>
+                      </div>
+                      <h5 className="text-xs font-bold text-slate-900">Unit 1402 (3BHK Parkview • $510,000)</h5>
+                      <p className="text-[11px] text-slate-600 mt-1 leading-relaxed">
+                        Held by <strong className="text-slate-800">Agent Rohan S.</strong> for Buyer Aditya Verma. Other channel partners are locked out.
+                      </p>
+                    </div>
+
+                    {/* Bank Escrow Realization Card */}
+                    <div className="p-3.5 bg-emerald-50/90 rounded-2xl border border-emerald-200 text-emerald-950">
+                      <div className="flex items-center justify-between text-xs font-bold mb-1">
+                        <span className="flex items-center gap-1.5 text-emerald-800 font-bold">
+                          <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                          <span>Escrow Realization Verified</span>
+                        </span>
+                        <span className="font-mono text-emerald-800 font-bold">$51,000 RTGS</span>
+                      </div>
+                      <h5 className="text-xs font-bold text-slate-900">Milestone 1 Deposit • Booking #BK-9021</h5>
+                      <p className="text-[11px] text-slate-600 mt-1 leading-relaxed">
+                        Cheque/UTR reference verified and deposited to RERA Escrow. Official stamped receipt #RCP-9021 issued.
+                      </p>
+                    </div>
+
+                    {/* 1-Click WhatsApp Trigger */}
+                    <div className="p-3 bg-white rounded-2xl border border-slate-200 flex items-center justify-between gap-3 shadow-2xs">
+                      <div className="min-w-0">
+                        <span className="text-xs font-bold text-slate-800 block truncate">1-Click WhatsApp Delivery</span>
+                        <span className="text-[11px] text-slate-500 truncate block">High-Res Brochure & Stamped Cost Sheet</span>
+                      </div>
+                      <Link
+                        href="/login/broker"
+                        className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold text-xs shadow-xs shrink-0 transition-all flex items-center gap-1"
+                      >
+                        <MessageSquare size={12} />
+                        <span>Dispatch</span>
+                      </Link>
+                    </div>
                   </div>
                 </div>
               </div>
