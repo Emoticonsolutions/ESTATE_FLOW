@@ -690,14 +690,14 @@ function AccountsDashboard() {
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-xl sm:text-2xl font-black text-estate-navy">
-              Billing, Collections & Escrow Ledger
+              Payment Ledger & Milestone Maintenance
             </h1>
             <span className="text-xs bg-emerald-50 text-emerald-700 font-bold px-2 py-0.5 rounded-full border border-emerald-200">
-              Head of Accounts: Suresh Nambiar
+              Audit-Trail Ledger • Direct-to-Bank
             </span>
           </div>
           <p className="text-xs text-estate-muted mt-0.5">
-            Milestone demand notes, RERA escrow audit, payment realizations & stamped digital receipts
+            Maintenance ledger for bank RTGS/Cheque realizations, RERA milestone demand notes & stamped receipts. (EstateFlow does not process payments; all buyer transactions are direct-to-bank).
           </p>
         </div>
 
@@ -707,7 +707,7 @@ function AccountsDashboard() {
             className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold shadow-sm transition-all flex items-center gap-1.5"
           >
             <Receipt size={14} />
-            <span>Record RTGS / Cheque</span>
+            <span>Record Bank Realization</span>
           </Link>
           <Link
             href="/reports"

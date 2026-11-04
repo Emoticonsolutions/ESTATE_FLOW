@@ -53,7 +53,7 @@ export function Sidebar() {
       case 'ACCOUNTS_MANAGER':
         return [
           { name: 'Accounts Cockpit', href: '/dashboard', icon: LayoutDashboard },
-          { name: 'Collections & Dues', href: '/collections', icon: Receipt },
+          { name: 'Payment Ledger & Dues', href: '/collections', icon: Receipt },
           { name: 'Bookings & Allotments', href: '/bookings', icon: FileCheck },
           { name: 'Cost Sheets & GST', href: '/cost-sheets', icon: Calculator },
           { name: 'Customer Invoices', href: '/documents', icon: FolderOpen },
@@ -101,7 +101,7 @@ export function Sidebar() {
           { name: 'Inventory & Towers', href: '/inventory', icon: Boxes },
           { name: 'Cost Sheets', href: '/cost-sheets', icon: Calculator },
           { name: 'Bookings', href: '/bookings', icon: FileCheck },
-          { name: 'Collections & Dues', href: '/collections', icon: Receipt },
+          { name: 'Payment Ledger & Dues', href: '/collections', icon: Receipt },
           { name: 'Brokers & Partners', href: '/brokers', icon: Handshake },
           { name: 'Property Listings', href: '/property-listings', icon: Home },
           { name: 'WhatsApp & Automations', href: '/communications', icon: MessageSquareShare },

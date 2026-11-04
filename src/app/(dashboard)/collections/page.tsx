@@ -57,13 +57,13 @@ export default function CollectionsPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded-card border border-estate-border shadow-sm">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-xl font-black text-estate-navy">Payment & Collection Management</h1>
+            <h1 className="text-xl font-black text-estate-navy">Payment Ledger & Milestone Maintenance</h1>
             <span className="text-xs bg-emerald-50 text-estate-green font-bold px-2 py-0.5 rounded-full border border-emerald-200">
-              Audit-Trail Protected
+              Audit-Trail Ledger (Direct-to-Bank)
             </span>
           </div>
           <p className="text-xs text-estate-muted mt-0.5">
-            Construction-linked demand notes, escrow reconciliation, and official stamped digital receipts
+            Maintenance record-keeping for bank RTGS/Cheque realizations, RERA milestone demand notes & stamped receipts. (EstateFlow does not process payments; all funds are deposited directly to builder escrow accounts).
           </p>
         </div>
 
@@ -73,7 +73,7 @@ export default function CollectionsPage() {
             className="px-4 py-2 bg-estate-blue hover:bg-blue-600 text-white rounded-lg text-xs font-bold shadow-sm transition-all flex items-center gap-1.5"
           >
             <Plus size={15} />
-            <span>Record Payment</span>
+            <span>Record Bank Realization</span>
           </button>
         )}
       </div>
