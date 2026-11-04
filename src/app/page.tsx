@@ -196,68 +196,67 @@ export default function HomePage() {
               </div>
 
               {/* Showcase Image & UI Layout */}
-              <div className="relative aspect-video sm:aspect-21/9 w-full overflow-hidden bg-slate-950">
-                <img
-                  src="https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=1400&q=80"
-                  alt="Modern Luxury High-Rise Real Estate"
-                  className="w-full h-full object-cover opacity-35"
-                />
+              <div className="grid grid-cols-1 lg:grid-cols-12 bg-slate-950">
+                {/* Left Col: Real High-Rise Architecture Photo */}
+                <div className="lg:col-span-5 relative h-72 lg:h-auto overflow-hidden">
+                  <img
+                    src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1000&q=80"
+                    alt="Modern Real Estate Architectural Skyscraper"
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent flex flex-col justify-end p-5">
+                    <span className="text-[10px] font-bold text-teal-400 uppercase tracking-wider bg-slate-900/90 px-2.5 py-1 rounded-md w-fit border border-slate-700">
+                      Flagship Project
+                    </span>
+                    <h4 className="text-white font-black text-lg mt-1">Azure Heights • Tower B</h4>
+                    <p className="text-xs text-slate-300">Luxury 2BHK, 3BHK & Sky Penthouses</p>
+                  </div>
+                </div>
 
-                {/* Overlaid Platform UI Mockup Layer */}
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/60 to-transparent p-6 sm:p-8 flex flex-col justify-end">
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    {/* Floating Status Card 1 */}
-                    <div className="p-4 bg-slate-900/90 backdrop-blur-md rounded-2xl border border-slate-700/80 shadow-xl">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider">
-                          Real-Time Inventory
-                        </span>
-                        <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-                      </div>
-                      <h4 className="text-white font-bold text-sm">Azure Heights • Tower B</h4>
-                      <p className="text-xs text-slate-300 mt-1">
-                        48 Total Units • 38 Sold • 2 on 72h Hold • <strong>8 Available</strong>
-                      </p>
-                      <div className="mt-3 flex items-center gap-1.5 text-[11px] text-teal-400 font-bold">
-                        <CheckCircle size={13} />
-                        <span>Zero Double-Booking Guarantee</span>
-                      </div>
+                {/* Right Col: Live EstateFlow Cockpit */}
+                <div className="lg:col-span-7 p-6 sm:p-8 flex flex-col justify-between space-y-4">
+                  <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+                    <div>
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Enterprise Workspace</span>
+                      <h4 className="text-white font-bold text-base">Prestige Estates Developer Console</h4>
+                    </div>
+                    <span className="text-xs font-mono text-emerald-400 bg-emerald-950/80 px-2.5 py-1 rounded-lg border border-emerald-800">
+                      Active Multi-Tenant Mode
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                    <div className="p-3 bg-slate-900/90 rounded-xl border border-slate-800">
+                      <span className="text-[10px] text-slate-400 block uppercase font-semibold">Total Inventory</span>
+                      <strong className="text-white text-sm font-mono">140 Units</strong>
+                      <span className="text-[10px] text-emerald-400 block mt-0.5">24 Available for Sale</span>
                     </div>
 
-                    {/* Floating Status Card 2 */}
-                    <div className="p-4 bg-slate-900/90 backdrop-blur-md rounded-2xl border border-slate-700/80 shadow-xl">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-[10px] font-bold text-teal-400 uppercase tracking-wider">
-                          Direct-to-Bank Ledger
-                        </span>
-                        <Receipt size={14} className="text-teal-400" />
-                      </div>
-                      <h4 className="text-white font-bold text-sm">Milestone Payment #BK-9021</h4>
-                      <p className="text-xs text-slate-300 mt-1">
-                        $51,000 Realized via RTGS Cheque • Deposited into Builder Escrow
-                      </p>
-                      <div className="mt-3 flex items-center gap-1.5 text-[11px] text-emerald-400 font-bold">
-                        <ShieldCheck size={13} />
-                        <span>Stamped Receipt with QR Code</span>
-                      </div>
+                    <div className="p-3 bg-slate-900/90 rounded-xl border border-slate-800">
+                      <span className="text-[10px] text-slate-400 block uppercase font-semibold">Active Holds</span>
+                      <strong className="text-amber-400 text-sm font-mono">4 Locked (72h)</strong>
+                      <span className="text-[10px] text-slate-400 block mt-0.5">Zero Double-Booking</span>
                     </div>
 
-                    {/* Floating Status Card 3 */}
-                    <div className="p-4 bg-slate-900/90 backdrop-blur-md rounded-2xl border border-slate-700/80 shadow-xl hidden sm:block">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-[10px] font-bold text-blue-400 uppercase tracking-wider">
-                          Lead Ingestion & WhatsApp
-                        </span>
-                        <MessageSquare size={14} className="text-emerald-400" />
-                      </div>
-                      <h4 className="text-white font-bold text-sm">Aditya Verma (Lead #EF-8921)</h4>
-                      <p className="text-xs text-slate-300 mt-1">
-                        Inquiry from Meta Ads • AI Score 94/100 • Executive Assigned
-                      </p>
-                      <div className="mt-3 flex items-center gap-1.5 text-[11px] text-emerald-300 font-bold">
-                        <span>1-Click WhatsApp Brochure Dispatched</span>
-                      </div>
+                    <div className="p-3 bg-slate-900/90 rounded-xl border border-slate-800 col-span-2 sm:col-span-1">
+                      <span className="text-[10px] text-slate-400 block uppercase font-semibold">Contracted Value</span>
+                      <strong className="text-teal-400 text-sm font-mono">$14.2M</strong>
+                      <span className="text-[10px] text-slate-400 block mt-0.5">Escrow Direct Ledgers</span>
                     </div>
+                  </div>
+
+                  {/* Live Transaction Strip */}
+                  <div className="p-3.5 bg-slate-900/80 rounded-xl border border-slate-800 space-y-2">
+                    <div className="flex items-center justify-between text-xs">
+                      <div className="flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-emerald-400" />
+                        <span className="text-white font-semibold">Latest Realization: Unit 1402</span>
+                      </div>
+                      <span className="font-mono text-teal-400 font-bold">$51,000 RTGS Realized</span>
+                    </div>
+                    <p className="text-[11px] text-slate-400">
+                      Cheque/UTR reference verified and deposited to RERA Escrow. Official stamped receipt #RCP-9021 issued.
+                    </p>
                   </div>
                 </div>
               </div>
@@ -427,23 +426,53 @@ export default function HomePage() {
               </div>
             </div>
 
-            <div className="order-1 lg:order-2 rounded-3xl overflow-hidden border border-slate-200 shadow-xl bg-slate-100">
+            <div className="order-1 lg:order-2 relative rounded-3xl overflow-hidden border border-slate-200 shadow-xl bg-slate-900 group">
               <img
-                src="https://images.unsplash.com/photo-1577495508048-b635879837f1?auto=format&fit=crop&w=900&q=80"
-                alt="High-Rise Tower Real Estate Inventory"
-                className="w-full h-80 object-cover hover:scale-102 transition-transform duration-500"
+                src="https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=900&q=80"
+                alt="Residential Apartment Complex with Distinct Tower Units"
+                className="w-full h-80 object-cover"
               />
+              {/* Live Inventory Status Overlay */}
+              <div className="absolute bottom-3 left-3 right-3 p-3 bg-slate-900/95 backdrop-blur-md rounded-2xl border border-slate-700 text-white shadow-xl">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-[10px] font-bold text-amber-400 uppercase tracking-wider flex items-center gap-1">
+                    <Lock size={11} /> 72-Hour Anti-Conflict Lock
+                  </span>
+                  <span className="text-[10px] font-mono text-teal-400 font-bold">48h 12m Remaining</span>
+                </div>
+                <p className="text-xs text-white font-semibold">
+                  Unit 1402 (3BHK Parkview) • Held for Buyer Aditya Verma
+                </p>
+                <span className="text-[10px] text-slate-300 mt-0.5 block">
+                  Other sales executives & channel partners are locked out in real-time.
+                </span>
+              </div>
             </div>
           </div>
 
           {/* Feature 2: Dynamic Cost Sheet Engine */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
-            <div className="rounded-3xl overflow-hidden border border-slate-200 shadow-xl bg-slate-100">
+            <div className="relative rounded-3xl overflow-hidden border border-slate-200 shadow-xl bg-slate-900 group">
               <img
-                src="https://images.unsplash.com/photo-1503387762-592deb58ef4e?auto=format&fit=crop&w=900&q=80"
-                alt="Architectural Blueprint & Cost Calculator"
-                className="w-full h-80 object-cover hover:scale-102 transition-transform duration-500"
+                src="https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&w=900&q=80"
+                alt="Financial Cost Quotation Review and Document Calculation"
+                className="w-full h-80 object-cover"
               />
+              {/* Authentic Cost Sheet Breakdown Box */}
+              <div className="absolute bottom-3 left-3 right-3 p-3 bg-slate-900/95 backdrop-blur-md rounded-2xl border border-slate-700 text-white shadow-xl">
+                <div className="flex items-center justify-between mb-1 text-[11px]">
+                  <span className="font-bold text-teal-400 uppercase tracking-wider">Automated Cost Calculation</span>
+                  <span className="font-mono text-emerald-400 font-bold">$510,000 Agreement Total</span>
+                </div>
+                <div className="text-[10px] text-slate-300 font-mono space-y-0.5">
+                  <div>Base Price (2,200 sq.ft @ $215/sq.ft): $473,000</div>
+                  <div>Floor Rise (14th Flr @ +$500/flr): +$7,000 • Parkview PLC: +$15,000</div>
+                </div>
+                <div className="mt-2 pt-1.5 border-t border-slate-800 flex items-center justify-between text-[10px]">
+                  <span className="text-slate-400">RERA Milestone Breakdown Attached</span>
+                  <span className="text-white font-bold bg-[#3478C9] px-2 py-0.5 rounded">PDF Generated</span>
+                </div>
+              </div>
             </div>
 
             <div className="space-y-4">
@@ -519,23 +548,55 @@ export default function HomePage() {
               </div>
             </div>
 
-            <div className="order-1 lg:order-2 rounded-3xl overflow-hidden border border-slate-200 shadow-xl bg-slate-100">
+            <div className="order-1 lg:order-2 relative rounded-3xl overflow-hidden border border-slate-200 shadow-xl bg-slate-900 group">
               <img
                 src="https://images.unsplash.com/photo-1450133064473-71024230f91b?auto=format&fit=crop&w=900&q=80"
-                alt="Executive Banking Agreement Signing"
-                className="w-full h-80 object-cover hover:scale-102 transition-transform duration-500"
+                alt="Executive Banking Agreement and Escrow Documentation Signing"
+                className="w-full h-80 object-cover"
               />
+              {/* Authentic Bank Realization Ledger Card */}
+              <div className="absolute bottom-3 left-3 right-3 p-3 bg-slate-900/95 backdrop-blur-md rounded-2xl border border-slate-700 text-white shadow-xl">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-1">
+                    <Receipt size={12} /> Direct-to-Bank Escrow Realization
+                  </span>
+                  <span className="text-[10px] bg-emerald-950 text-emerald-300 border border-emerald-800 px-2 py-0.5 rounded font-bold">
+                    Realized & Cleared
+                  </span>
+                </div>
+                <p className="text-xs text-white font-mono font-bold">
+                  RTGS UTR #HDFC009218201 • $51,000 Milestone 1
+                </p>
+                <span className="text-[10px] text-slate-300 mt-0.5 block">
+                  Deposited into Builder Escrow • Official Stamped Receipt #RCP-9021 Issued with QR Verification
+                </span>
+              </div>
             </div>
           </div>
 
           {/* Feature 4: Broker Network & 90-Day Protection */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
-            <div className="rounded-3xl overflow-hidden border border-slate-200 shadow-xl bg-slate-100">
+            <div className="relative rounded-3xl overflow-hidden border border-slate-200 shadow-xl bg-slate-900 group">
               <img
-                src="https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=900&q=80"
-                alt="Channel Partner Broker Partnership"
-                className="w-full h-80 object-cover hover:scale-102 transition-transform duration-500"
+                src="https://images.unsplash.com/photo-1521791136064-7986c2920216?auto=format&fit=crop&w=900&q=80"
+                alt="Channel Partner Professional Real Estate Handshake"
+                className="w-full h-80 object-cover"
               />
+              {/* Authentic Channel Partner Protection Card */}
+              <div className="absolute bottom-3 left-3 right-3 p-3 bg-slate-900/95 backdrop-blur-md rounded-2xl border border-slate-700 text-white shadow-xl">
+                <div className="flex items-center justify-between mb-1 text-[11px]">
+                  <span className="font-bold text-purple-400 uppercase tracking-wider flex items-center gap-1">
+                    <Handshake size={12} /> Broker Deal Attribution
+                  </span>
+                  <span className="font-mono text-amber-400 font-bold">$10,200 Commission</span>
+                </div>
+                <p className="text-xs text-slate-200 font-semibold">
+                  Apex Realty Partners • Client: Aditya Verma
+                </p>
+                <span className="text-[10px] text-emerald-400 mt-0.5 block font-semibold">
+                  90-Day Anti-Poaching Protection Active • Approved by Company Admin
+                </span>
+              </div>
             </div>
 
             <div className="space-y-4">
