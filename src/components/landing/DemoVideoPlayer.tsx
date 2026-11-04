@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   Play,
   Pause,
@@ -15,665 +15,426 @@ import {
   Receipt,
   Users,
   ShieldCheck,
-  ChevronRight,
-  MonitorPlay,
-  ExternalLink,
   Film,
   CheckCircle2,
-  Layers,
   Lock,
-  Clock,
+  ExternalLink,
   ArrowRight,
-  Send,
-  Building2,
-  FileText,
-  DollarSign,
-  Download,
+  Upload,
+  Link as LinkIcon,
+  Video,
 } from 'lucide-react';
 import Link from 'next/link';
 
-interface DemoScene {
-  id: string;
-  timestamp: string;
-  durationSeconds: number;
+interface VideoChapter {
   title: string;
   tag: string;
-  targetModuleUrl: string;
-  moduleName: string;
-  description: string;
-  highlights: string[];
+  timeSeconds: number;
+  timeLabel: string;
+  moduleUrl: string;
+  desc: string;
 }
 
 export function DemoVideoPlayer() {
-  const scenes: DemoScene[] = [
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(135); // 2:15 default duration
+  const [isMuted, setIsMuted] = useState(false);
+  const [activeChapter, setActiveChapter] = useState(0);
+  const [videoSrc, setVideoSrc] = useState<string>('/videos/demo.mp4');
+  const [hasCustomVideo, setHasCustomVideo] = useState(false);
+  const [inputUrl, setInputUrl] = useState('');
+  const [showUrlModal, setShowUrlModal] = useState(false);
+
+  const chapters: VideoChapter[] = [
     {
-      id: 'lead-360',
-      timestamp: '0:00 - 0:45',
-      durationSeconds: 45,
-      title: 'Lead 360 Ingestion & Instant WhatsApp Automation',
-      tag: 'Leads & WhatsApp',
-      targetModuleUrl: '/leads',
-      moduleName: 'Launch Lead 360',
-      description:
-        'Inbound buyer leads from Meta Lead Ads, Google Search, and portals sync automatically with duplicate phone number detection, 0-100 AI buyer scoring, and 1-click WhatsApp brochure dispatch.',
-      highlights: [
-        'Automatic phone number & email deduplication across company accounts',
-        'Instant 0-100 AI purchase intent scoring',
-        '1-Click WhatsApp brochure & project deck dispatch',
-        'Automated round-robin distribution to available sales executives',
-      ],
+      title: 'Stakeholder Login & Lead 360 Ingestion',
+      tag: 'Lead Capture',
+      timeSeconds: 0,
+      timeLabel: '0:00',
+      moduleUrl: '/leads',
+      desc: 'Automatic lead ingestion from Meta Ads & Google with instant duplicate phone detection.',
     },
     {
-      id: 'tower-inventory',
-      timestamp: '0:45 - 1:30',
-      durationSeconds: 45,
-      title: 'Interactive Tower Stacking & 72-Hour Anti-Conflict Lock',
-      tag: 'Inventory & Locking',
-      targetModuleUrl: '/inventory',
-      moduleName: 'Launch Tower Inventory',
-      description:
-        'Architectural floor-by-floor unit stacking grid with color-coded live availability. Placing a hold locks the unit in the database for 72 hours with a live countdown, preventing concurrent double-booking.',
-      highlights: [
-        'Color-coded unit stacking: Available (Green), Locked (Amber), Booked (Blue), Sold (Slate)',
-        '72-Hour transactional database lock with live countdown timer',
-        'Multi-agent concurrency protection—no two reps can claim the same unit',
-        'Bulk Excel inventory import and real-time floor rise visibility',
-      ],
+      title: '3D Tower Inventory Stacking & 72-Hour Hold',
+      tag: '72h Unit Lock',
+      timeSeconds: 30,
+      timeLabel: '0:30',
+      moduleUrl: '/inventory',
+      desc: 'Interactive floor grid with live availability and 72-hour transactional anti-conflict locking.',
     },
     {
-      id: 'cost-sheets',
-      timestamp: '1:30 - 2:15',
-      durationSeconds: 45,
-      title: 'Dynamic Automated Cost Sheet & Pricing Matrix',
-      tag: 'Cost Calculator',
-      targetModuleUrl: '/cost-sheets',
-      moduleName: 'Launch Cost Calculator',
-      description:
-        'Calculates base pricing, floor rise rate ($500/floor), preferential location charges (PLC), covered parking, and statutory taxes with one-click exportable PDF cost sheets.',
-      highlights: [
-        'Automatic floor rise, corner PLC, and clubhouse amenity calculations',
-        'Manager-level discount approvals before cost sheet finalization',
-        'Complete RERA milestone installment breakdown schedule',
-        'Instant official PDF cost sheet generation for client presentation',
-      ],
+      title: 'Dynamic Cost Sheet Calculation & PDF Export',
+      tag: 'Cost Sheet',
+      timeSeconds: 65,
+      timeLabel: '1:05',
+      moduleUrl: '/cost-sheets',
+      desc: 'Base rate, floor rise ($500/flr), and corner PLC calculation with instant PDF quotation.',
     },
     {
-      id: 'milestone-ledger',
-      timestamp: '2:15 - 3:00',
-      durationSeconds: 45,
-      title: 'Direct-to-Bank Milestone Maintenance & Stamped Receipts',
-      tag: 'Accounting Ledger',
-      targetModuleUrl: '/collections',
-      moduleName: 'Launch Payment Ledger',
-      description:
-        'Direct-to-bank accounting maintenance ledger recording RTGS/Cheque realization reference numbers, generating milestone demand notes, and issuing official stamped digital receipts with QR verification.',
-      highlights: [
-        'Construction-linked milestone payment schedules (Plinth, 5th Slab, Handover)',
-        'Records bank Cheque/UTR realization reference numbers directly to escrow',
-        'Automated demand letters with overdue aging alerts',
-        'Official stamped digital receipts with cryptographic QR verification',
-      ],
+      title: 'Direct-to-Bank Realization & Stamped Receipts',
+      tag: 'Bank Ledger',
+      timeSeconds: 95,
+      timeLabel: '1:35',
+      moduleUrl: '/collections',
+      desc: 'Recording RTGS/Cheque deposits into builder escrow accounts with verified stamped receipts.',
     },
     {
-      id: 'broker-network',
-      timestamp: '3:00 - 3:45',
-      durationSeconds: 45,
-      title: 'Channel Partner & RERA Broker Commission Network',
+      title: 'Broker Network & 90-Day Anti-Poaching Lock',
       tag: 'Broker Portal',
-      targetModuleUrl: '/brokers',
-      moduleName: 'Launch Broker Portal',
-      description:
-        'Accredited broker directory with 90-day anti-poaching client ownership locks, tiered commission calculations, deal attribution tracking, and executive payout approvals.',
-      highlights: [
-        '90-Day anti-poaching client ownership tagging for brokers',
-        'Automated tiered commission calculation (1.5% - 3.0%)',
-        'Separate authenticated login portal for external brokers',
-        'Manager-approved commission payout vouchers and tax TDS statements',
-      ],
+      timeSeconds: 120,
+      timeLabel: '2:00',
+      moduleUrl: '/brokers',
+      desc: 'Channel partner registration, buyer ownership tagging, and commission payout statements.',
     },
   ];
 
-  const [activeSceneIndex, setActiveSceneIndex] = useState(0);
-  const [isPlaying, setIsPlaying] = useState(true);
-  const [currentSeconds, setCurrentSeconds] = useState(12);
-  const [playbackSpeed, setPlaybackSpeed] = useState<number>(1);
-  const [isMuted, setIsMuted] = useState(false);
-
-  const activeScene = scenes[activeSceneIndex];
-  const totalDemoSeconds = 225; // 3 minutes 45 seconds
-
-  // Auto playback simulation loop
-  useEffect(() => {
-    if (!isPlaying) return;
-
-    const interval = setInterval(() => {
-      setCurrentSeconds((prev) => {
-        const next = prev + 1;
-        if (next >= totalDemoSeconds) {
-          return 0; // Loop back
-        }
-
-        // Determine scene based on seconds
-        const sceneIdx = Math.min(Math.floor(next / 45), scenes.length - 1);
-        if (sceneIdx !== activeSceneIndex) {
-          setActiveSceneIndex(sceneIdx);
-        }
-
-        return next;
+  const togglePlay = () => {
+    if (!videoRef.current) return;
+    if (isPlaying) {
+      videoRef.current.pause();
+      setIsPlaying(false);
+    } else {
+      videoRef.current.play().catch(() => {
+        // Fallback if browser blocks autoplay or file not loaded yet
+        setIsPlaying(true);
       });
-    }, 1000 / playbackSpeed);
-
-    return () => clearInterval(interval);
-  }, [isPlaying, playbackSpeed, activeSceneIndex, scenes.length]);
-
-  const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = parseInt(e.target.value, 10);
-    setCurrentSeconds(val);
-    const sceneIdx = Math.min(Math.floor(val / 45), scenes.length - 1);
-    setActiveSceneIndex(sceneIdx);
+      setIsPlaying(true);
+    }
   };
 
-  const handleSelectScene = (index: number) => {
-    setActiveSceneIndex(index);
-    setCurrentSeconds(index * 45);
+  const handleTimeUpdate = () => {
+    if (!videoRef.current) return;
+    const curr = videoRef.current.currentTime;
+    setCurrentTime(curr);
+    if (videoRef.current.duration) {
+      setDuration(videoRef.current.duration);
+    }
+
+    // Update active chapter
+    for (let i = chapters.length - 1; i >= 0; i--) {
+      if (curr >= chapters[i].timeSeconds) {
+        setActiveChapter(i);
+        break;
+      }
+    }
+  };
+
+  const handleSeek = (seconds: number) => {
+    if (videoRef.current) {
+      videoRef.current.currentTime = seconds;
+      setCurrentTime(seconds);
+    }
+  };
+
+  const handleApplyUrl = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (inputUrl.trim()) {
+      setVideoSrc(inputUrl.trim());
+      setHasCustomVideo(true);
+      setShowUrlModal(false);
+      setTimeout(() => {
+        if (videoRef.current) {
+          videoRef.current.load();
+          videoRef.current.play().catch(() => {});
+          setIsPlaying(true);
+        }
+      }, 300);
+    }
   };
 
   const formatTime = (secs: number) => {
     const m = Math.floor(secs / 60);
-    const s = secs % 60;
+    const s = Math.floor(secs % 60);
     return `${m}:${s < 10 ? '0' : ''}${s}`;
   };
 
   return (
     <div className="w-full">
-      {/* Chapter Selection Tabs */}
+      {/* Chapter Tabs */}
       <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
         <div className="flex flex-wrap items-center gap-2">
-          {scenes.map((scene, idx) => {
-            const isActive = activeSceneIndex === idx;
+          {chapters.map((ch, idx) => {
+            const isActive = activeChapter === idx;
             return (
               <button
-                key={scene.id}
-                onClick={() => handleSelectScene(idx)}
+                key={idx}
+                onClick={() => {
+                  setActiveChapter(idx);
+                  handleSeek(ch.timeSeconds);
+                }}
                 className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 border ${
                   isActive
-                    ? 'bg-[#17324D] text-white border-[#17324D] shadow-md ring-2 ring-teal-400/30'
-                    : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50 hover:border-slate-300'
+                    ? 'bg-[#17324D] text-white border-[#17324D] shadow-sm ring-2 ring-teal-400/20'
+                    : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
                 }`}
               >
                 <span
-                  className={`w-5 h-5 rounded-md flex items-center justify-center font-mono text-[10px] ${
-                    isActive ? 'bg-teal-500 text-slate-950 font-bold' : 'bg-slate-100 text-slate-600'
+                  className={`w-4 h-4 rounded-full text-[10px] flex items-center justify-center font-mono ${
+                    isActive ? 'bg-teal-400 text-slate-950 font-bold' : 'bg-slate-100 text-slate-500'
                   }`}
                 >
                   {idx + 1}
                 </span>
-                <span>{scene.tag}</span>
+                <span>{ch.tag}</span>
+                <span className="text-[10px] opacity-70 font-mono">({ch.timeLabel})</span>
               </button>
             );
           })}
         </div>
 
-        <div className="flex items-center gap-2 text-xs font-semibold text-slate-500">
-          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-          <span>Interactive Product Simulator (No External Plugins)</span>
-        </div>
+        {/* Change Video Source / Upload Button */}
+        <button
+          onClick={() => setShowUrlModal(true)}
+          className="text-xs font-bold text-slate-600 hover:text-[#17324D] bg-white border border-slate-200 hover:border-slate-300 px-3 py-1.5 rounded-xl shadow-xs flex items-center gap-1.5 transition-all"
+        >
+          <Video size={13} className="text-teal-600" />
+          <span>{hasCustomVideo ? 'Change Video Source' : 'Link Your Recorded Video (.mp4)'}</span>
+        </button>
       </div>
 
-      {/* Main Interactive Demo Player Container */}
-      <div className="rounded-2xl border border-slate-700 bg-slate-950 shadow-2xl overflow-hidden">
-        {/* macOS Browser Chrome Bar */}
-        <div className="bg-slate-900 px-4 py-3 border-b border-slate-800 flex items-center justify-between">
+      {/* Main Video Frame */}
+      <div className="rounded-2xl border border-slate-800 bg-slate-950 shadow-2xl overflow-hidden relative group">
+        {/* Top Browser Bar */}
+        <div className="bg-slate-900 px-4 py-2.5 border-b border-slate-800 flex items-center justify-between">
           <div className="flex items-center space-x-2">
             <span className="w-3 h-3 rounded-full bg-rose-500 inline-block" />
             <span className="w-3 h-3 rounded-full bg-amber-500 inline-block" />
             <span className="w-3 h-3 rounded-full bg-emerald-500 inline-block" />
             <span className="ml-3 text-[11px] font-mono text-slate-400 hidden sm:inline">
-              estateflow.io/app{activeScene.targetModuleUrl}
+              estateflow-eta.vercel.app/demo-walkthrough
             </span>
           </div>
 
           <div className="flex items-center gap-3">
             <span className="text-[11px] font-bold text-teal-400 bg-teal-950/80 border border-teal-800 px-2.5 py-0.5 rounded-full flex items-center gap-1.5">
               <span className="w-1.5 h-1.5 rounded-full bg-teal-400 animate-ping" />
-              <span>Official EstateFlow Live Tour</span>
+              <span>Full Screen Software Demo</span>
             </span>
 
             <Link
-              href={activeScene.targetModuleUrl}
+              href={chapters[activeChapter].moduleUrl}
               className="text-xs text-slate-300 hover:text-white flex items-center gap-1 bg-slate-800 hover:bg-slate-700 px-2.5 py-1 rounded-lg transition-colors border border-slate-700"
             >
-              <span>{activeScene.moduleName}</span>
+              <span>Test Live Screen</span>
               <ExternalLink size={12} />
             </Link>
           </div>
         </div>
 
-        {/* Dynamic Video Stage Screen */}
-        <div className="relative aspect-video w-full bg-gradient-to-br from-slate-950 via-[#0B1522] to-slate-900 overflow-hidden select-none p-4 sm:p-8 flex items-center justify-center">
-          {/* Animated Watermark */}
-          <div className="absolute top-4 left-4 z-20 flex items-center gap-2 bg-slate-900/80 backdrop-blur-md px-3 py-1.5 rounded-xl border border-slate-800 text-xs">
-            <div className="w-5 h-5 rounded bg-teal-500 text-slate-950 font-black text-[10px] flex items-center justify-center">
-              EF
+        {/* Real HTML5 Video Player Container */}
+        <div className="relative aspect-video w-full bg-slate-950 flex items-center justify-center overflow-hidden">
+          <video
+            ref={videoRef}
+            src={videoSrc}
+            onTimeUpdate={handleTimeUpdate}
+            onPlay={() => setIsPlaying(true)}
+            onPause={() => setIsPlaying(false)}
+            onEnded={() => setIsPlaying(false)}
+            playsInline
+            controls={false}
+            className="w-full h-full object-cover"
+            onError={() => {
+              // Video file not yet mounted, keep poster view active
+            }}
+          />
+
+          {/* Fallback / Initial Video Presentation Overlay */}
+          {!hasCustomVideo && (
+            <div className="absolute inset-0 bg-gradient-to-tr from-slate-950 via-slate-900/90 to-slate-950 flex flex-col items-center justify-center text-center p-6 sm:p-10 z-10">
+              <div className="w-20 h-20 rounded-full bg-gradient-to-tr from-teal-500 to-[#3478C9] text-white flex items-center justify-center shadow-2xl shadow-teal-500/30 mb-5 group-hover:scale-105 transition-transform cursor-pointer"
+                onClick={togglePlay}
+              >
+                {isPlaying ? <Pause size={32} /> : <Play size={32} className="ml-1" />}
+              </div>
+
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-teal-950 text-teal-300 border border-teal-800 text-xs font-bold mb-3">
+                <Sparkles size={13} />
+                <span>Real Screen Recording Ready</span>
+              </div>
+
+              <h3 className="text-xl sm:text-3xl font-black text-white max-w-xl tracking-tight">
+                EstateFlow Platform Demo Walkthrough
+              </h3>
+
+              <p className="text-xs sm:text-sm text-slate-400 mt-2 max-w-lg leading-relaxed">
+                Watch the genuine screen recording showing lead acquisition, 3D floor stacking, 72-hour unit hold, instant cost sheet generation, and direct bank milestone ledgers.
+              </p>
+
+              <div className="mt-6 flex flex-wrap items-center justify-center gap-3 text-xs">
+                <button
+                  onClick={() => setShowUrlModal(true)}
+                  className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-xl font-bold border border-slate-700 flex items-center gap-2 transition-all shadow"
+                >
+                  <Upload size={14} className="text-teal-400" />
+                  <span>Attach Your Recorded MP4 Video</span>
+                </button>
+
+                <Link
+                  href="/login"
+                  className="px-4 py-2 bg-gradient-to-r from-teal-500 to-[#3478C9] text-white rounded-xl font-bold flex items-center gap-1.5 shadow"
+                >
+                  <span>Experience Platform Live</span>
+                  <ArrowRight size={13} />
+                </Link>
+              </div>
             </div>
-            <span className="font-bold text-white tracking-tight">
-              ESTATE<span className="text-[#3478C9]">FLOW</span> OS
-            </span>
-          </div>
+          )}
 
-          {/* Interactive Simulated Screen per Scene */}
-          <div className="w-full max-w-4xl h-full flex flex-col justify-center">
-            {/* SCENE 1: Lead 360 & WhatsApp */}
-            {activeSceneIndex === 0 && (
-              <div className="animate-in fade-in duration-500 space-y-4">
-                <div className="bg-slate-900/90 border border-slate-700 rounded-2xl p-5 shadow-2xl backdrop-blur-md">
-                  <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-teal-500/20 text-teal-400 flex items-center justify-center font-bold">
-                        <Users size={20} />
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <h4 className="font-bold text-white text-base">Aditya Verma (Lead #EF-8921)</h4>
-                          <span className="text-[10px] font-bold bg-emerald-950 text-emerald-400 border border-emerald-800 px-2 py-0.5 rounded-full">
-                            Hot Buyer (Score 94/100)
-                          </span>
-                        </div>
-                        <p className="text-xs text-slate-400 mt-0.5">
-                          Source: Meta Lead Ads • Inquired for 3BHK Azure Heights • Budget: $450k - $550k
-                        </p>
-                      </div>
-                    </div>
-                    <span className="text-xs font-mono text-teal-400 bg-slate-800 px-2.5 py-1 rounded-lg border border-slate-700">
-                      Zero Duplication Verified
-                    </span>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 my-4">
-                    <div className="p-3 bg-slate-800/80 rounded-xl border border-slate-700">
-                      <span className="text-[10px] text-slate-400 block uppercase">Assigned Executive</span>
-                      <strong className="text-white text-xs">Rohan S. (Senior Property Advisor)</strong>
-                    </div>
-                    <div className="p-3 bg-slate-800/80 rounded-xl border border-slate-700">
-                      <span className="text-[10px] text-slate-400 block uppercase">Next Scheduled Action</span>
-                      <strong className="text-amber-300 text-xs">Site Visit Tomorrow, 11:30 AM</strong>
-                    </div>
-                    <div className="p-3 bg-slate-800/80 rounded-xl border border-slate-700">
-                      <span className="text-[10px] text-slate-400 block uppercase">Broker Attribution</span>
-                      <strong className="text-teal-300 text-xs">Direct Organic / Zero Broker Fee</strong>
-                    </div>
-                  </div>
-
-                  {/* WhatsApp Simulation Banner */}
-                  <div className="p-3 bg-emerald-950/70 border border-emerald-800 rounded-xl flex items-center justify-between text-xs text-emerald-200">
-                    <div className="flex items-center gap-2">
-                      <div className="w-7 h-7 rounded-lg bg-emerald-500 text-slate-950 flex items-center justify-center font-bold">
-                        <MessageSquare size={14} />
-                      </div>
-                      <div>
-                        <strong>1-Click WhatsApp Trigger Ready:</strong>
-                        <span className="text-emerald-300 ml-1">Send High-Res Azure Heights Brochure & Cost Sheet PDF</span>
-                      </div>
-                    </div>
-                    <span className="px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg text-xs cursor-pointer shadow">
-                      Dispatch WhatsApp →
-                    </span>
-                  </div>
-                </div>
+          {/* Play/Pause Center Overlay on Hover */}
+          {hasCustomVideo && (
+            <button
+              onClick={togglePlay}
+              className={`absolute inset-0 w-full h-full flex items-center justify-center bg-black/30 transition-opacity ${
+                isPlaying ? 'opacity-0 hover:opacity-100' : 'opacity-100'
+              }`}
+            >
+              <div className="w-16 h-16 rounded-full bg-teal-500/90 text-slate-950 flex items-center justify-center shadow-2xl backdrop-blur-sm">
+                {isPlaying ? <Pause size={28} /> : <Play size={28} className="ml-1" />}
               </div>
-            )}
-
-            {/* SCENE 2: Tower Inventory & 72-Hour Anti-Conflict Lock */}
-            {activeSceneIndex === 1 && (
-              <div className="animate-in fade-in duration-500 space-y-4">
-                <div className="bg-slate-900/90 border border-slate-700 rounded-2xl p-5 shadow-2xl backdrop-blur-md">
-                  <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <h4 className="font-bold text-white text-base">Azure Heights • Tower B Architectural Stacking</h4>
-                        <span className="text-[10px] font-bold bg-amber-950 text-amber-400 border border-amber-800 px-2 py-0.5 rounded-full flex items-center gap-1">
-                          <Lock size={10} /> 72-Hour Hold Engine
-                        </span>
-                      </div>
-                      <p className="text-xs text-slate-400 mt-0.5">
-                        Floor 14 • Penthouse & Luxury Corner Suites • Concurrency Shield Active
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-1.5 text-xs">
-                      <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
-                      <span className="text-slate-300 mr-2">Available</span>
-                      <span className="w-2.5 h-2.5 rounded-full bg-amber-500" />
-                      <span className="text-slate-300 mr-2">Locked</span>
-                      <span className="w-2.5 h-2.5 rounded-full bg-blue-600" />
-                      <span className="text-slate-300">Booked</span>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-4 gap-3 my-4">
-                    <div className="p-3 bg-emerald-950/60 border border-emerald-700 rounded-xl text-center">
-                      <span className="text-xs font-mono font-bold text-emerald-300 block">Unit 1401</span>
-                      <span className="text-[10px] text-emerald-400">3BHK • $495,000</span>
-                      <span className="mt-1 block text-[9px] font-bold bg-emerald-900/80 text-emerald-200 py-0.5 rounded">
-                        Available
-                      </span>
-                    </div>
-
-                    <div className="p-3 bg-amber-950/90 border-2 border-amber-400 rounded-xl text-center shadow-lg ring-2 ring-amber-400/30 animate-pulse">
-                      <div className="flex items-center justify-center gap-1 text-amber-300 text-xs font-mono font-bold">
-                        <Lock size={12} /> Unit 1402
-                      </div>
-                      <span className="text-[10px] text-amber-200">3BHK Parkview • $510,000</span>
-                      <span className="mt-1 block text-[9px] font-bold bg-amber-900 text-amber-100 py-0.5 rounded">
-                        Locked (48h 12m left)
-                      </span>
-                    </div>
-
-                    <div className="p-3 bg-blue-950/60 border border-blue-700 rounded-xl text-center">
-                      <span className="text-xs font-mono font-bold text-blue-300 block">Unit 1403</span>
-                      <span className="text-[10px] text-blue-400">2BHK • $335,000</span>
-                      <span className="mt-1 block text-[9px] font-bold bg-blue-900/80 text-blue-200 py-0.5 rounded">
-                        Booked
-                      </span>
-                    </div>
-
-                    <div className="p-3 bg-slate-800/80 border border-slate-700 rounded-xl text-center opacity-60">
-                      <span className="text-xs font-mono font-bold text-slate-300 block">Unit 1404</span>
-                      <span className="text-[10px] text-slate-400">3BHK • $485,000</span>
-                      <span className="mt-1 block text-[9px] font-bold bg-slate-700 text-slate-300 py-0.5 rounded">
-                        Sold
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="p-3 bg-slate-800/80 rounded-xl border border-slate-700 text-xs text-slate-300 flex items-center justify-between">
-                    <span>
-                      <strong className="text-amber-400">Anti-Double-Booking Protection:</strong> Unit 1402 is held for Buyer token verification. Other agents and brokers are locked out.
-                    </span>
-                    <span className="font-mono text-teal-400 font-bold">Expires: Nov 07, 2026</span>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* SCENE 3: Cost Sheet Engine */}
-            {activeSceneIndex === 2 && (
-              <div className="animate-in fade-in duration-500 space-y-4">
-                <div className="bg-slate-900/90 border border-slate-700 rounded-2xl p-5 shadow-2xl backdrop-blur-md">
-                  <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-                    <div>
-                      <h4 className="font-bold text-white text-base">Dynamic RERA Cost Sheet Calculator</h4>
-                      <p className="text-xs text-slate-400 mt-0.5">
-                        Unit 1402 (2,200 sq.ft) • Floor 14 • Azure Heights Project
-                      </p>
-                    </div>
-                    <span className="text-xs font-bold text-emerald-400 bg-emerald-950 border border-emerald-800 px-2.5 py-1 rounded-lg">
-                      Manager Pre-Approved
-                    </span>
-                  </div>
-
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 my-4 text-xs">
-                    <div className="p-3 bg-slate-800/80 rounded-xl border border-slate-700">
-                      <span className="text-[10px] text-slate-400 block">Base Rate</span>
-                      <strong className="text-white text-sm font-mono">$215 / sq.ft</strong>
-                      <span className="text-[10px] text-slate-500 block">$473,000</span>
-                    </div>
-                    <div className="p-3 bg-slate-800/80 rounded-xl border border-slate-700">
-                      <span className="text-[10px] text-slate-400 block">Floor Rise (14th Flr)</span>
-                      <strong className="text-teal-400 text-sm font-mono">+$7,000</strong>
-                      <span className="text-[10px] text-slate-500 block">+$500/floor rate</span>
-                    </div>
-                    <div className="p-3 bg-slate-800/80 rounded-xl border border-slate-700">
-                      <span className="text-[10px] text-slate-400 block">Parkview Corner PLC</span>
-                      <strong className="text-teal-400 text-sm font-mono">+$15,000</strong>
-                      <span className="text-[10px] text-slate-500 block">Premium corner facing</span>
-                    </div>
-                    <div className="p-3 bg-slate-800/80 rounded-xl border border-slate-700">
-                      <span className="text-[10px] text-slate-400 block">Total Agreement Cost</span>
-                      <strong className="text-amber-400 text-sm font-mono">$510,000</strong>
-                      <span className="text-[10px] text-slate-500 block">Taxes & Amenities Incl.</span>
-                    </div>
-                  </div>
-
-                  <div className="p-3 bg-slate-800/60 rounded-xl border border-slate-700 flex items-center justify-between text-xs text-slate-300">
-                    <span>
-                      Milestone schedule automatically formatted: <strong>10% Booking • 10% Foundation • 80% Construction Linked</strong>
-                    </span>
-                    <button className="px-3 py-1.5 bg-[#3478C9] hover:bg-blue-600 text-white rounded-lg font-bold text-xs flex items-center gap-1.5 shadow">
-                      <Download size={13} />
-                      <span>Download PDF Cost Sheet</span>
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* SCENE 4: Direct-to-Bank Milestone Maintenance Ledger */}
-            {activeSceneIndex === 3 && (
-              <div className="animate-in fade-in duration-500 space-y-4">
-                <div className="bg-slate-900/90 border border-slate-700 rounded-2xl p-5 shadow-2xl backdrop-blur-md">
-                  <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <h4 className="font-bold text-white text-base">Direct-to-Bank Accounting & Milestone Ledger</h4>
-                        <span className="text-[10px] font-bold bg-teal-950 text-teal-400 border border-teal-800 px-2 py-0.5 rounded-full">
-                          Audit Trail Ledger
-                        </span>
-                      </div>
-                      <p className="text-xs text-slate-400 mt-0.5">
-                        Booking #BK-2026-9021 • Unit 1402 • Builder RERA Escrow Account
-                      </p>
-                    </div>
-                    <span className="text-xs font-mono text-emerald-400 bg-emerald-950/80 px-2.5 py-1 rounded-lg border border-emerald-800">
-                      Realized: $102,000 / $510,000
-                    </span>
-                  </div>
-
-                  <div className="space-y-2 my-4">
-                    <div className="p-3 bg-slate-800/80 rounded-xl border border-slate-700 flex items-center justify-between text-xs">
-                      <div>
-                        <strong className="text-white block">Milestone 1: Booking Advance (10%)</strong>
-                        <span className="text-slate-400 text-[11px]">
-                          RTGS UTR #HDFC009218201 • State Bank of India • Deposited to RERA Escrow
-                        </span>
-                      </div>
-                      <div className="text-right">
-                        <span className="text-emerald-400 font-bold font-mono">$51,000</span>
-                        <span className="block text-[10px] font-bold text-emerald-500">Realized & Stamped</span>
-                      </div>
-                    </div>
-
-                    <div className="p-3 bg-slate-800/80 rounded-xl border border-slate-700 flex items-center justify-between text-xs">
-                      <div>
-                        <strong className="text-white block">Milestone 2: Plinth Completion (10%)</strong>
-                        <span className="text-slate-400 text-[11px]">
-                          Cheque #881920 Clearance • ICICI Bank • Deposited Oct 28
-                        </span>
-                      </div>
-                      <div className="text-right">
-                        <span className="text-emerald-400 font-bold font-mono">$51,000</span>
-                        <span className="block text-[10px] font-bold text-emerald-500">Realized & Stamped</span>
-                      </div>
-                    </div>
-
-                    <div className="p-3 bg-amber-950/50 rounded-xl border border-amber-800/80 flex items-center justify-between text-xs">
-                      <div>
-                        <strong className="text-amber-300 block">Milestone 3: 5th Floor Slab Cast (15%)</strong>
-                        <span className="text-amber-200 text-[11px]">Demand Notice Dispatched via WhatsApp & Email</span>
-                      </div>
-                      <div className="text-right">
-                        <span className="text-amber-400 font-bold font-mono">$76,500</span>
-                        <span className="block text-[10px] font-bold text-amber-300">Due in 14 Days</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="p-3 bg-emerald-950/70 border border-emerald-800 rounded-xl flex items-center justify-between text-xs text-emerald-200">
-                    <div className="flex items-center gap-2">
-                      <Receipt size={16} className="text-emerald-400" />
-                      <span>Official Stamped Receipt #RCP-9021-02 with Verification QR Code ready</span>
-                    </div>
-                    <span className="px-3 py-1 bg-emerald-600 text-white font-bold rounded-lg text-xs">
-                      View Stamped Receipt PDF
-                    </span>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* SCENE 5: Broker Network & Deal Attribution */}
-            {activeSceneIndex === 4 && (
-              <div className="animate-in fade-in duration-500 space-y-4">
-                <div className="bg-slate-900/90 border border-slate-700 rounded-2xl p-5 shadow-2xl backdrop-blur-md">
-                  <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-                    <div>
-                      <h4 className="font-bold text-white text-base">Channel Partner & Broker Network Portal</h4>
-                      <p className="text-xs text-slate-400 mt-0.5">
-                        Apex Realty Partners (RERA #PRM/KA/RERA/1251/310/AG/18021) • Tier-1 Partner
-                      </p>
-                    </div>
-                    <span className="text-xs font-bold text-purple-400 bg-purple-950 border border-purple-800 px-2.5 py-1 rounded-lg">
-                      Brokerage Tier: 2.0%
-                    </span>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 my-4 text-xs">
-                    <div className="p-3 bg-slate-800/80 rounded-xl border border-slate-700">
-                      <span className="text-[10px] text-slate-400 block uppercase">Client Ownership Lock</span>
-                      <strong className="text-white text-xs">Buyer Aditya Verma</strong>
-                      <span className="text-[10px] text-emerald-400 block">Locked for 90 Days (Anti-Poaching)</span>
-                    </div>
-                    <div className="p-3 bg-slate-800/80 rounded-xl border border-slate-700">
-                      <span className="text-[10px] text-slate-400 block uppercase">Earned Commission</span>
-                      <strong className="text-amber-400 text-sm font-mono">$10,200</strong>
-                      <span className="text-[10px] text-slate-400 block">Based on $510,000 unit</span>
-                    </div>
-                    <div className="p-3 bg-slate-800/80 rounded-xl border border-slate-700">
-                      <span className="text-[10px] text-slate-400 block uppercase">Payout Status</span>
-                      <strong className="text-emerald-400 text-xs">Approved by Company Admin</strong>
-                      <span className="text-[10px] text-slate-400 block">TDS Deducted (5%)</span>
-                    </div>
-                  </div>
-
-                  <div className="p-3 bg-slate-800/60 rounded-xl border border-slate-700 text-xs text-slate-300 flex items-center justify-between">
-                    <span>Brokers have their own private portal to register clients, track deals, and view commission vouchers.</span>
-                    <span className="font-bold text-teal-400">Zero Direct Contact Leakage</span>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
+            </button>
+          )}
         </div>
 
         {/* Video Scrubber & Playback Controls Bar */}
-        <div className="bg-slate-900 px-4 sm:px-6 py-4 border-t border-slate-800 text-white">
-          {/* Timeline Range Bar */}
-          <div className="flex items-center gap-3 mb-3">
+        <div className="bg-slate-900 px-4 sm:px-6 py-3.5 border-t border-slate-800 text-white">
+          {/* Seek Bar */}
+          <div className="flex items-center gap-3 mb-2.5">
             <span className="text-xs font-mono text-slate-400 w-10 text-right">
-              {formatTime(currentSeconds)}
+              {formatTime(currentTime)}
             </span>
             <input
               type="range"
               min="0"
-              max={totalDemoSeconds}
-              value={currentSeconds}
-              onChange={handleSeek}
+              max={duration || 135}
+              value={currentTime}
+              onChange={(e) => handleSeek(parseFloat(e.target.value))}
               className="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-teal-400 hover:accent-teal-300"
             />
             <span className="text-xs font-mono text-slate-400 w-10">
-              {formatTime(totalDemoSeconds)}
+              {formatTime(duration)}
             </span>
           </div>
 
           {/* Controls Footer */}
-          <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center justify-between text-xs">
             <div className="flex items-center gap-3">
               <button
-                onClick={() => setIsPlaying(!isPlaying)}
-                className="w-9 h-9 rounded-xl bg-teal-500 hover:bg-teal-400 text-slate-950 flex items-center justify-center font-bold shadow-md transition-all"
-                title={isPlaying ? 'Pause Demo' : 'Play Demo'}
+                onClick={togglePlay}
+                className="w-8 h-8 rounded-lg bg-teal-500 hover:bg-teal-400 text-slate-950 flex items-center justify-center font-bold shadow transition-all"
               >
-                {isPlaying ? <Pause size={16} /> : <Play size={16} className="ml-0.5" />}
+                {isPlaying ? <Pause size={15} /> : <Play size={15} className="ml-0.5" />}
+              </button>
+
+              <button
+                onClick={() => handleSeek(0)}
+                className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800"
+                title="Restart"
+              >
+                <RotateCcw size={15} />
               </button>
 
               <button
                 onClick={() => {
-                  setCurrentSeconds(0);
-                  setActiveSceneIndex(0);
-                  setIsPlaying(true);
+                  if (videoRef.current) {
+                    videoRef.current.muted = !isMuted;
+                    setIsMuted(!isMuted);
+                  }
                 }}
-                className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
-                title="Restart Tour"
+                className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800"
               >
-                <RotateCcw size={16} />
-              </button>
-
-              <div className="h-4 w-px bg-slate-800" />
-
-              {/* Speed Buttons */}
-              <div className="flex items-center gap-1 bg-slate-800/80 p-0.5 rounded-lg border border-slate-700 text-[11px] font-mono">
-                {[1, 1.5, 2].map((spd) => (
-                  <button
-                    key={spd}
-                    onClick={() => setPlaybackSpeed(spd)}
-                    className={`px-2 py-0.5 rounded ${
-                      playbackSpeed === spd
-                        ? 'bg-teal-500 text-slate-950 font-bold'
-                        : 'text-slate-400 hover:text-white'
-                    }`}
-                  >
-                    {spd}x
-                  </button>
-                ))}
-              </div>
-
-              {/* Mute Toggle */}
-              <button
-                onClick={() => setIsMuted(!isMuted)}
-                className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
-                title={isMuted ? 'Unmute' : 'Mute'}
-              >
-                {isMuted ? <VolumeX size={16} /> : <Volume2 size={16} />}
+                {isMuted ? <VolumeX size={15} /> : <Volume2 size={15} />}
               </button>
             </div>
 
-            {/* Current Active Scene Title */}
             <div className="flex items-center gap-2">
-              <span className="text-xs font-bold text-slate-300 hidden md:inline">
-                {activeScene.title}
+              <span className="text-slate-300 font-semibold hidden md:inline">
+                {chapters[activeChapter].title}
               </span>
-              <Link
-                href="/login"
-                className="px-3.5 py-1.5 bg-[#3478C9] hover:bg-blue-600 text-white rounded-lg text-xs font-bold transition-all shadow flex items-center gap-1.5"
-              >
-                <span>Launch Live Demo</span>
-                <ArrowRight size={13} />
-              </Link>
+              <span className="font-mono text-teal-400 text-[11px] bg-slate-800 px-2 py-0.5 rounded">
+                Chapter {activeChapter + 1}/5
+              </span>
             </div>
           </div>
         </div>
 
-        {/* Feature Highlights Accordion/Checklist */}
-        <div className="bg-slate-950 p-4 sm:p-5 border-t border-slate-800/80">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-teal-400 flex items-center gap-1.5">
-              <Sparkles size={12} />
-              <span>What You Are Seeing In This Chapter:</span>
-            </span>
-            <span className="text-xs text-slate-400 font-mono">
-              Step {activeSceneIndex + 1} of {scenes.length}
-            </span>
+        {/* Current Chapter Description Bar */}
+        <div className="bg-slate-950 p-4 border-t border-slate-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+          <div>
+            <strong className="text-white block font-semibold">
+              {chapters[activeChapter].title}
+            </strong>
+            <p className="text-slate-400 text-[11px] mt-0.5">
+              {chapters[activeChapter].desc}
+            </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs">
-            {activeScene.highlights.map((h, i) => (
-              <div key={i} className="flex items-start gap-2 text-slate-300">
-                <CheckCircle2 size={14} className="text-teal-400 shrink-0 mt-0.5" />
-                <span>{h}</span>
-              </div>
-            ))}
-          </div>
+          <Link
+            href={chapters[activeChapter].moduleUrl}
+            className="shrink-0 px-3.5 py-1.5 bg-[#3478C9] hover:bg-blue-600 text-white rounded-lg font-bold text-xs flex items-center gap-1.5 transition-all shadow"
+          >
+            <span>Launch Live in CRM</span>
+            <ArrowRight size={13} />
+          </Link>
         </div>
       </div>
+
+      {/* Modal: Attach Your Recorded Video Link */}
+      {showUrlModal && (
+        <div className="fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in">
+          <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-slate-200 relative animate-in zoom-in-95">
+            <div className="flex items-center gap-2 text-teal-600 text-xs font-bold uppercase tracking-wider mb-1">
+              <Video size={14} />
+              <span>Use Your Real Screen Recording</span>
+            </div>
+            <h3 className="text-xl font-black text-[#17324D]">
+              Attach Your Recorded Video
+            </h3>
+            <p className="text-xs text-slate-600 mt-1 mb-5 leading-relaxed">
+              You can connect any direct video URL (e.g. an MP4 hosted on Cloudinary, AWS S3, Vercel Blob, Loom, or placed in <code>public/videos/demo.mp4</code>).
+            </p>
+
+            <form onSubmit={handleApplyUrl} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  Video URL or Relative File Path
+                </label>
+                <div className="relative">
+                  <LinkIcon size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <input
+                    type="text"
+                    placeholder="https://.../my-estateflow-recording.mp4 or /videos/demo.mp4"
+                    required
+                    value={inputUrl}
+                    onChange={(e) => setInputUrl(e.target.value)}
+                    className="w-full pl-9 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 font-mono focus:outline-none focus:ring-1 focus:ring-[#3478C9]"
+                  />
+                </div>
+                <span className="text-[10px] text-slate-400 mt-1 block">
+                  Tip: If you placed the video file in <code>public/videos/demo.mp4</code>, just enter <code>/videos/demo.mp4</code>.
+                </span>
+              </div>
+
+              <div className="pt-2 flex items-center justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setShowUrlModal(false)}
+                  className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 rounded-xl text-xs font-bold text-white bg-[#3478C9] hover:bg-blue-600 shadow"
+                >
+                  Save & Play Video
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
