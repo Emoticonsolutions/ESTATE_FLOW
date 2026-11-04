@@ -595,13 +595,40 @@ export default function SuperAdminPage() {
     };
     setInvoices([newInvoice, ...invoices]);
 
+    // Also persist asynchronously to live PostgreSQL via API
+    try {
+      fetch('/api/v1/companies', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: provisionForm.companyName,
+          code: rawCode,
+          plan: provisionForm.plan,
+          userLimit: provisionForm.userLimit,
+          projectLimit: provisionForm.projectLimit,
+          contactEmail: provisionForm.email || provisionForm.adminEmail,
+          phone: provisionForm.phone,
+          city: provisionForm.city,
+          registrationNumber: cinNumber,
+          cin: cinNumber,
+          reraNumber: reraId,
+          gstin: gstinId,
+          address: officeAddress,
+          monthlyFee,
+          adminName: provisionForm.adminName,
+          adminEmail: provisionForm.adminEmail,
+          adminPassword: securePass,
+        }),
+      }).catch((err) => console.warn('Non-blocking cloud db sync notice:', err));
+    } catch {}
+
     // Close provisioning modal and open the Credential Handoff dialog!
     setProvisionModalOpen(false);
     setCredentialHandoff({
       company: result.company,
       admin: result.admin,
       rawPassword: securePass,
-      loginUrl: typeof window !== 'undefined' ? `${window.location.origin}/login?portal=admin` : 'https://estate-flow-emoticonsolutiins.vercel.app/login?portal=admin',
+      loginUrl: typeof window !== 'undefined' ? `${window.location.origin}/login?portal=admin` : 'https://estate-flow-eta.vercel.app/login?portal=admin',
     });
 
     showBanner(`Developer tenant "${result.company.name}" successfully provisioned and live!`);
